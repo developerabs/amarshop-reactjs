@@ -1,0 +1,17 @@
+{
+  "name": "AmarShop",
+  "short_name": "AmarShop",
+  "description": "A modern ecommerce experience for trendy products, fast delivery, and seamless checkout.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#047857",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
