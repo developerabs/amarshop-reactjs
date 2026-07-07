@@ -16,6 +16,8 @@ type FlashProduct = {
   images: string[];
   image: string;
   available: number;
+  salePrice: number;
+  discountAmount: number;
 };
 
 export default function FlashDeals() {
@@ -34,14 +36,19 @@ export default function FlashDeals() {
       try {
         const response = await api.get('/product/flash-deals');
         if (response.data.success) {
-          const deals = response.data.data.map((p: { id: number; name: string; slug: string; price: string; total_stock: number; images: string[] }) => ({
+          const deals = response.data.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; dicount_type: string  }) => ({
             ...p,
             id: String(p.id),
+            slug: p.slug,
+            name: p.name,
             price: parseFloat(p.price),
+            salePrice: parseFloat(p.sale_price),
             flashPrice: Math.floor(parseFloat(p.price) * 0.8),
-            category: 'Flash Deal',
+            category: p.category_name,
             image: p.images?.[0] ?? '',
-            available: p.total_stock
+            available: p.total_stock,
+            discountAmount: parseFloat(p.discount_amount),
+            discountType: p.dicount_type,
           }));
           setFlashProducts(deals);
         }
@@ -137,7 +144,7 @@ export default function FlashDeals() {
                 
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-xl font-black text-gray-900">{formatPrice(product.price)}</span>
+                    <span className="text-xl font-black text-gray-900">{formatPrice(product.salePrice)}</span>
                     <span className="text-xs text-gray-400 line-through font-medium">{formatPrice(product.price)}</span>
                   </div>
                   <button 
