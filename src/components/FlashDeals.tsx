@@ -18,6 +18,7 @@ type FlashProduct = {
   available: number;
   salePrice: number;
   discountAmount: number;
+  discountType: string;
 };
 
 export default function FlashDeals() {
@@ -34,9 +35,9 @@ export default function FlashDeals() {
   useEffect(() => {
     const fetchFlashDeals = async () => {
       try {
-        const response = await api.get('/product/flash-deals');
+        const response = await api.get('/product/home-products?type=flash-deals');
         if (response.data.success) {
-          const deals = response.data.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; dicount_type: string  }) => ({
+          const deals = response.data.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string  }) => ({
             ...p,
             id: String(p.id),
             slug: p.slug,
@@ -48,7 +49,7 @@ export default function FlashDeals() {
             image: p.images?.[0] ?? '',
             available: p.total_stock,
             discountAmount: parseFloat(p.discount_amount),
-            discountType: p.dicount_type,
+            discountType: p.discount_type,
           }));
           setFlashProducts(deals);
         }
@@ -127,11 +128,15 @@ export default function FlashDeals() {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                   referrerPolicy="no-referrer"
                 />
+                {product.discountAmount > 0 && (
                 <div className="absolute top-3 right-3">
                   <span className="bg-red-600 text-white text-[10px] font-black px-2.5 py-1.5 rounded-lg shadow-lg uppercase tracking-wider">
-                    -20% OFF
+                    {product.discountType === "percentage"
+                    ? `-${product.discountAmount}% OFF`
+                    : `-৳${product.discountAmount} OFF`}
                   </span>
                 </div>
+                )}
               </div>
               
               <div className="space-y-4">
