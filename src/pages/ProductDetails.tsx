@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { getProducts } from "../lib/dataService";
+import { getProductById, getProductBySlug, getProducts } from "../lib/dataService";
 import ProductCard from "../components/ProductCard";
 import {
   Star,
@@ -43,11 +43,13 @@ type ApiProduct = {
   slug: string;
   price: string;
   cost: string;
+  sale_price?: string | null;
   total_stock: number;
   short_description: string | null;
   description: string | null;
   thumbnail: string | null;
-  image: string | null;
+  image: string | string[] | null;
+  images?: string[] | null;
   is_new_arrival: boolean;
   category?: {
     name: string;
@@ -61,10 +63,40 @@ type ApiProduct = {
   attributes?: Record<string, string[]>;
 };
 
+const buildFallbackProduct = (identifier: string | undefined): ApiProduct | null => {
+  if (!identifier) return null;
+
+  const localProduct = getProductById(identifier) ?? getProductBySlug(identifier);
+  if (!localProduct) return null;
+
+  const normalizedId = Number.parseInt(String(localProduct.id).replace(/\D/g, ""), 10);
+
+  return {
+    id: Number.isNaN(normalizedId) ? 1 : normalizedId,
+    code: `AS-${String(localProduct.id).toUpperCase()}`,
+    name: localProduct.name,
+    slug: localProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    price: String(localProduct.price),
+    cost: String(Math.max(0, localProduct.price - 500)),
+    total_stock: localProduct.inStock ? 25 : 0,
+    short_description: `Premium ${localProduct.category.toLowerCase()} selection designed for comfort and style.`,
+    description: `Explore ${localProduct.name}, crafted with care and available for quick delivery across Bangladesh.`,
+    thumbnail: localProduct.image,
+    image: localProduct.image,
+    is_new_arrival: Boolean(localProduct.isNew),
+    category: {
+      name: localProduct.category,
+      slug: localProduct.category.toLowerCase().replace(/\s+/g, "-"),
+    },
+    variants: [],
+    attributes: {},
+  };
+};
+
 export default function ProductDetails() {
   const params = useParams<{ productName?: string; productSlug?: string; id?: string  }>();
   const productName = params.productName || params.productSlug || params.id;
-  const productSlug = params.productSlug;
+  const productSlug = params.productSlug || params.productName || params.id;
   const navigate = useNavigate();
   const { addRecentView, addToCart, toggleWishlist, isInWishlist } = useCommerce();
 
@@ -84,18 +116,40 @@ export default function ProductDetails() {
       return;
     }
 
+    const fallbackProduct = buildFallbackProduct(productName);
+    if (fallbackProduct) {
+      setProduct(fallbackProduct);
+    } else {
+      setProduct(null);
+    }
+
     setLoading(true);
     setError(null);
 
-    api.get(`/product/details/${productName}`)
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) {
+      setLoading(false);
+      if (!fallbackProduct) {
+        setError("Product details not found.");
+      }
+      return;
+    }
+
+    const requestSlug = productSlug || productName;
+
+    api.get(`/product/details/${requestSlug}`)
       .then((response) => {
         const data = response?.data;
-        console.log("Fetched product data:", data);
         const rawProduct = data?.data?.product ?? data?.data ?? data?.product;
 
         if (!rawProduct) {
-          setError(data?.message || "Product details not found.");
-          setProduct(null);
+          if (fallbackProduct) {
+            setProduct(fallbackProduct);
+            setError(null);
+          } else {
+            setError(data?.message || "Product details not found.");
+            setProduct(null);
+          }
           return;
         }
 
@@ -104,19 +158,15 @@ export default function ProductDetails() {
 
         const normalizedVariants = Array.isArray(variantSource)
           ? variantSource.map((variant: any) => {
+              const normalizedAttributes: Record<string, string> = {};
               if (variant?.attributes && typeof variant.attributes === "object") {
-                return {
-                  id: variant.id,
-                  name: variant.name,
-                  price: variant.price,
-                  cost: variant.cost,
-                  stock: variant.stock ?? 0,
-                  image: variant.image ?? null,
-                  attributes: variant.attributes,
-                };
+                Object.entries(variant.attributes).forEach(([key, value]) => {
+                  if (typeof value === "string") {
+                    normalizedAttributes[key] = value;
+                  }
+                });
               }
 
-              const normalizedAttributes: Record<string, string> = {};
               if (Array.isArray(variant?.variant_values)) {
                 variant.variant_values.forEach((value: any) => {
                   if (value?.attribute_name && value?.attribute_value) {
@@ -137,16 +187,39 @@ export default function ProductDetails() {
             })
           : [];
 
+        const normalizedImages = [
+          ...(Array.isArray(rawProduct.images)
+            ? rawProduct.images.filter((img: unknown): img is string => typeof img === "string" && img.trim().length > 0)
+            : []),
+          ...(Array.isArray(rawProduct.image)
+            ? rawProduct.image.filter((img: unknown): img is string => typeof img === "string" && img.trim().length > 0)
+            : typeof rawProduct.image === "string"
+            ? [rawProduct.image]
+            : []),
+        ];
+
         setProduct({
           ...rawProduct,
+          image: normalizedImages[0] ?? rawProduct.thumbnail ?? null,
+          thumbnail: rawProduct.thumbnail ?? normalizedImages[0] ?? null,
+          images: normalizedImages,
+          price: rawProduct.sale_price ?? rawProduct.price ?? "0",
+          cost: rawProduct.cost ?? rawProduct.price ?? "0",
+          short_description: rawProduct.short_description ?? rawProduct.description ?? null,
+          description: rawProduct.description ?? rawProduct.short_description ?? null,
           attributes,
           variants: normalizedVariants,
         });
       })
       .catch(() => {
-        console.error("Error fetching product details for:", productName);
-        setError("Unable to fetch product details.");
-        setProduct(null);
+        if (fallbackProduct) {
+          setProduct(fallbackProduct);
+          setError(null);
+        } else {
+          console.error("Error fetching product details for:", productName);
+          setError("Unable to fetch product details.");
+          setProduct(null);
+        }
       })
       .finally(() => setLoading(false));
   }, [productName]);
@@ -163,25 +236,23 @@ export default function ProductDetails() {
     setSelectedSize(product.attributes?.Size?.[0] ?? "");
   }, [product]);
 
-  const isValidImage = (value: string | null | undefined) =>
-    Boolean(value && !value.toLowerCase().includes("null"));
+  const isValidImage = (value: unknown): value is string => {
+    if (typeof value !== "string") return false;
+    const normalized = value.trim().toLowerCase();
+    return Boolean(normalized) && !normalized.includes("null") && !normalized.includes("undefined");
+  };
 
-  const productImage = product
-    ? isValidImage(product.image)
-      ? product.image
-      : isValidImage(product.thumbnail)
-      ? product.thumbnail
-      : `https://picsum.photos/seed/${product.id}/800/1000`
-    : "";
+  const mainImage = isValidImage(product?.thumbnail) ? product.thumbnail : null;
 
-  const images = product
-    ? [
-        productImage || `https://picsum.photos/seed/${product.id}/800/1000`,
-        `https://picsum.photos/seed/${product.id}1/800/1000`,
-        `https://picsum.photos/seed/${product.id}2/800/1000`,
-        `https://picsum.photos/seed/${product.id}3/800/1000`,
-      ]
+  const galleryImages = product?.images
+    ? product.images.filter((img): img is string => isValidImage(img))
     : [];
+
+  const images = mainImage
+    ? [mainImage, ...galleryImages].filter((img, index, arr) => Boolean(img) && arr.indexOf(img) === index)
+    : galleryImages;
+
+  const productImage = images[0] ?? null;
 
   const selectedVariant = product?.variants?.find(
     (variant) =>
@@ -192,10 +263,8 @@ export default function ProductDetails() {
 
   const displayedPrice = selectedVariant
     ? Number(selectedVariant.price)
-    : Number(product?.price ?? 0);
-  const displayedCost = selectedVariant
-    ? Number(selectedVariant.cost)
-    : Number(product?.cost ?? 0);
+    : Number(product?.sale_price ?? 0);
+  const displayedAdditionalPrice = Number(product?.price ?? 0);
   const stockCount = selectedVariant?.stock ?? product?.total_stock ?? 0;
   const stockLabel = stockCount > 0 ? `${stockCount} in stock` : "Out of stock";
   const categoryName = product?.category?.name ?? "Uncategorized";
@@ -366,9 +435,9 @@ export default function ProductDetails() {
                 <span className="text-3xl sm:text-4xl font-black text-gray-900">
                   {formatPrice(displayedPrice)}
                 </span>
-                {displayedCost > 0 && (
+                {displayedAdditionalPrice > 0 && (
                   <span className="text-sm text-gray-500 font-semibold uppercase tracking-[0.2em]">
-                    Cost: {formatPrice(displayedCost)}
+                    {formatPrice(displayedAdditionalPrice)}
                   </span>
                 )}
               </div>
