@@ -92,10 +92,12 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         {/* Discount Badge */}
-        {product.discount && (
+        {((product as any).discountAmount ?? 0) > 0 && (
           <div className="absolute top-3 left-3 z-10">
-            <span className="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-lg uppercase tracking-wider">
-              -{product.discount}%
+            <span className="bg-red-600 text-white text-[10px] font-black px-2.5 py-1.5 rounded-lg shadow-lg uppercase tracking-wider">
+              {(product as any).discountType === "percentage"
+                ? `-${(product as any).discountAmount}%`
+                : `-৳${(product as any).discountAmount}`}
             </span>
           </div>
         )}
@@ -152,14 +154,9 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
 
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-black text-gray-900">
-              {formatPrice(product.price)}
-            </span>
-            {product.originalPrice && (
-              <span className="text-xs text-gray-400 line-through font-medium">
-                {formatPrice(product.originalPrice)}
-              </span>
-            )}
+            {/* salePrice may not exist on Product type; fallback to product.price */}
+            <span className="text-xl font-black text-gray-900">{formatPrice((product as any).salePrice ?? product.price)}</span>
+                    <span className="text-xs text-gray-400 line-through font-medium">{formatPrice(product.price)}</span>
           </div>
           <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">
             <Star className="w-3 h-3 text-yellow-500 fill-current" />

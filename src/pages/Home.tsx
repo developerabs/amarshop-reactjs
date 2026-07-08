@@ -62,11 +62,11 @@ export default function Home({ onCategorySeeMore, onAddToCart }: HomeProps) {
 
         <FlashDeals />
 
-        <ProductGrid title="Trending" highlightWord="Now" onAddToCart={onAddToCart} />
-        <ProductGrid title="Daily" highlightWord="Offer" onAddToCart={onAddToCart} />
-        <ProductGrid title="Best" highlightWord="Deals" onAddToCart={onAddToCart} />
-        <ProductGrid title="Top" highlightWord="Sale" onAddToCart={onAddToCart} />
-        <ProductGrid title="New" highlightWord="Arrivals" onAddToCart={onAddToCart} />
+        <ProductGrid title="Trending" highlightWord="Now" type="trending" onAddToCart={onAddToCart} />
+        <ProductGrid title="Daily" highlightWord="Offer" type="daily-offer" onAddToCart={onAddToCart} />
+        <ProductGrid title="Best" highlightWord="Deals" type="best-deal" onAddToCart={onAddToCart} />
+        <ProductGrid title="Top" highlightWord="Sale" type="top-sale" onAddToCart={onAddToCart} />
+        <ProductGrid title="New" highlightWord="Arrivals" type="new-arraivals" onAddToCart={onAddToCart} />
         
         <BlogSection />
         <BrandsSection />

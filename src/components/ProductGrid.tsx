@@ -1,17 +1,35 @@
-import { useRef } from "react";
-import { PRODUCTS } from "../data/mockData";
+import { useState, useEffect, useRef } from "react";
 import ProductCard from "./ProductCard";
 import { motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
 interface ProductGridProps {
   title: string;
   highlightWord: string;
+  type: string;
   onAddToCart?: (productId: string) => void;
 }
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  flashPrice: number;
+  category: string;
+  images: string[];
+  image: string;
+  available: number;
+  salePrice: number;
+  discountAmount: number;
+  discountType: string;
+  rating: number;
+  reviews: number;
+};
 
-export default function ProductGrid({ title, highlightWord, onAddToCart }: ProductGridProps) {
+export default function ProductGrid({ title, highlightWord, type, onAddToCart }: ProductGridProps) {
+  const [productsData, setProducts] = useState<Product[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -22,6 +40,36 @@ export default function ProductGrid({ title, highlightWord, onAddToCart }: Produ
       scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
     }
   };
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get(`/product/home-products?type=${type}`);
+        if (response.data.success) {
+          const deals = response.data.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number }) => ({
+            ...p,
+            id: String(p.id),
+            slug: p.slug,
+            name: p.name,
+            price: parseFloat(p.price),
+            salePrice: parseFloat(p.sale_price),
+            flashPrice: Math.floor(parseFloat(p.price) * 0.8),
+            category: p.category_name,
+            image: p.images?.[0] ?? '',
+            available: p.total_stock,
+            discountAmount: parseFloat(p.discount_amount),
+            discountType: p.discount_type,
+            rating: typeof p.rating === 'string' ? parseFloat(p.rating) : (p.rating ?? 0),
+            reviews: typeof p.reviews === 'string' ? parseInt(String(p.reviews), 10) : (p.reviews ?? 0),
+          }));
+          setProducts(deals);
+        }
+      } catch (error) {
+        console.error('Failed to fetch flash deals:', error);
+      }
+    };
+
+    fetchProducts();
+  }, [type]);
 
   return (
     <section className="py-4 sm:py-6 bg-gray-50/50 overflow-hidden">
@@ -67,7 +115,7 @@ export default function ProductGrid({ title, highlightWord, onAddToCart }: Produ
           ref={scrollRef}
           className="flex gap-4 sm:gap-6 lg:gap-5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4"
         >
-          {PRODUCTS.map((product, idx) => (
+          {productsData.map((product, idx) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, x: 20 }}
