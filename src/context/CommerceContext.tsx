@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
 import { useNotifications } from "./NotificationContext";
 import type { Product } from "../types";
-import { filterProducts as filterProductsByCriteria, getProductById, getProducts } from "../lib/dataService";
+import { filterProducts as filterProductsByCriteria, getProducts } from "../lib/dataService";
+import api from "../services/api";
 
 export interface CartItem extends Product {
   quantity: number;
@@ -27,7 +28,7 @@ interface CommerceContextValue {
   setSearchQuery: (query: string) => void;
   setCategoryFilter: (category: string) => void;
   clearFilters: () => void;
-  getProduct: (value: string) => Product | undefined;
+  getProduct: (value: string) => Promise<Product | undefined>;
   filterProducts: (options?: { query?: string; category?: string }) => Product[];
   addRecentView: (productId: string) => void;
   wishlistCount: number;
@@ -64,6 +65,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
   const [compareItems, setCompareItems] = useState<string[]>(() => loadJson(STORAGE_KEYS.compare, []));
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cartItems));
@@ -81,6 +83,17 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(STORAGE_KEYS.compare, JSON.stringify(compareItems));
   }, [compareItems]);
 
+  const getProductById = useCallback(async (id: string): Promise<Product | undefined> => {
+    try {
+      const response = await api.get(`/products/${id}`);
+      if (response.data.success) {
+        return response.data.data.product;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
   const cartCount = useMemo(
     () => cartItems.reduce((acc, item) => acc + item.quantity, 0),
     [cartItems]
@@ -95,9 +108,16 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
 
   const { addNotification } = useNotifications();
 
-  const addToCart = useCallback((productId: string) => {
-    const product = getProductById(productId);
-    if (!product) return;
+  const addToCart = useCallback(async (productId: string) => {
+    const product = await getProductById(productId);
+    if (!product) {
+      addNotification({
+        type: "error",
+        title: "Error",
+        message: "Product not found."
+      });
+      return;
+    }
 
     setCartItems((current) => {
       const existing = current.find((item) => item.id === productId);
@@ -108,7 +128,12 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
             : item
         );
       }
-      return [...current, { ...product, quantity: 1, variation: "Default" }];
+      const cartItem: CartItem = {
+        ...product,
+        quantity: 1,
+        variation: "Default"
+      };
+      return [...current, cartItem];
     });
 
     addNotification({
@@ -116,7 +141,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       title: "Added to Cart",
       message: `${product.name} has been added to your cart.`
     });
-  }, [addNotification]);
+  }, [addNotification, getProductById]);
 
   const removeFromCart = useCallback((productId: string) => {
     setCartItems((current) => current.filter((item) => item.id !== productId));
@@ -132,8 +157,8 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const toggleWishlist = useCallback((productId: string) => {
-    const product = getProductById(productId);
+  const toggleWishlist = useCallback(async (productId: string) => {
+    const product = await getProductById(productId);
     if (!product) return;
 
     setWishlist((current) => {
@@ -152,7 +177,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       
       return next;
     });
-  }, [addNotification]);
+  }, [addNotification, getProductById]);
 
   const isInWishlist = useCallback((productId: string) => wishlist.includes(productId), [wishlist]);
 
@@ -162,8 +187,9 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getProduct = useCallback((value: string) => {
-    return getProductById(value) ?? getProducts().find((product) => product.name.toLowerCase() === value.toLowerCase());
-  }, []);
+    const product = getProductById(value);
+    return product ?? getProducts().find((product) => product.name.toLowerCase() === value.toLowerCase());
+  }, [getProductById]);
 
   const filterProducts = useCallback(({ query = "", category = "" } = {}) => {
     return filterProductsByCriteria({ query, category });
@@ -176,8 +202,8 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const toggleCompareItem = useCallback((productId: string) => {
-    const product = getProductById(productId);
+  const toggleCompareItem = useCallback(async (productId: string) => {
+    const product = await getProductById(productId);
     if (!product) return;
 
     setCompareItems((current) => {
@@ -205,7 +231,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
 
       return next;
     });
-  }, [addNotification]);
+  }, [addNotification, getProductById]);
 
   const isInCompare = useCallback((productId: string) => compareItems.includes(productId), [compareItems]);
 
