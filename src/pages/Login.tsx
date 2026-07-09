@@ -20,18 +20,24 @@ export default function Login() {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent)=>{
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock successful login
-      setIsLoading(false);
+    try{
+      await loginUser(formData.email, formData.password);
       navigate(from, { replace: true });
-    }, 1500);
-  };
+    }
+    catch(error){
+      setError("Invalid email or password");
+      console.log(error);
+    }
+    finally{
+      setIsLoading(false);
+    }
+
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
