@@ -1,10 +1,10 @@
 import { X, Grid, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { HIERARCHICAL_CATEGORIES } from "../data/categories";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useCommerce } from "../context/CommerceContext";
+import api from "../services/api";
 
 interface CategoryOverlayProps {
   isOpen: boolean;
@@ -16,34 +16,58 @@ interface FlatCategory {
   image: string;
 }
 
+interface CategoryData {
+  id: number;
+  name: string;
+  slug: string;
+  image: string;
+  children?: CategoryData[];
+}
+
 export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProps) {
   const navigate = useNavigate();
   const commerce = useCommerce();
   const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/categories");
+      if (response.data.success) {
+        setCategories(response.data.data.categories);
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const allCategories = useMemo(() => {
     const flat: FlatCategory[] = [];
-    HIERARCHICAL_CATEGORIES.forEach(parent => {
-      flat.push({ 
-        name: parent.name, 
-        image: `https://picsum.photos/seed/${parent.name.replace(/\s+/g, '').toLowerCase()}/200/200` 
-      });
-      parent.subCategories?.forEach(sub => {
+    const flattenCategories = (items: CategoryData[]) => {
+      items.forEach(parent => {
         flat.push({ 
-          name: sub.name, 
-          image: `https://picsum.photos/seed/${sub.name.replace(/\s+/g, '').toLowerCase()}/200/200` 
+          name: parent.name, 
+          image: parent.image 
         });
-        sub.childCategories.forEach(child => {
-          flat.push({ 
-            name: child, 
-            image: `https://picsum.photos/seed/${child.replace(/\s+/g, '').toLowerCase()}/200/200` 
-          });
-        });
+        if (parent.children && parent.children.length > 0) {
+          flattenCategories(parent.children);
+        }
       });
-    });
+    };
+    flattenCategories(categories);
     // Remove duplicates if any
     return Array.from(new Map(flat.map(item => [item.name, item])).values());
-  }, []);
+  }, [categories]);
 
   const filteredCategories = allCategories.filter(cat => 
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())

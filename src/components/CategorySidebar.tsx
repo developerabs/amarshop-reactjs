@@ -1,12 +1,35 @@
-import { HIERARCHICAL_CATEGORIES } from "../data/categories";
-import { ChevronRight, LayoutGrid } from "lucide-react";
-import { useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "../services/api";
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  image: string;
+  children?: Category[];
+}
 
 export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void }) {
-  const [activeCategory, setActiveCategory] = useState<any | null>(null);
+  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  const displayedCategories = HIERARCHICAL_CATEGORIES.slice(3);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/categories');
+        if (response.data.success) {
+          setAllCategories(response.data.data.categories);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <div 
@@ -19,8 +42,8 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
       {/* Sidebar Box */}
       <div className="w-full h-full bg-white border border-gray-100 rounded-xl shadow-sm flex flex-col overflow-hidden">
         <div className="py-2 overflow-y-auto flex-1 min-h-0 relative custom-sidebar-scrollbar">
-          {displayedCategories.map((category, idx) => {
-            const IconComponent = category.icon;
+          {allCategories.map((category, idx) => {
+            // const IconComponent = category.icon;
             return (
               <div 
                 key={category.name}
@@ -35,13 +58,13 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all border ${activeCategory?.name === category.name ? 'bg-white text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-400 border-transparent group-hover:bg-white group-hover:text-emerald-600 group-hover:border-emerald-100'}`}>
-                      <IconComponent className="w-3.5 h-3.5" />
+                      {/* <IconComponent className="w-3.5 h-3.5" /> */}
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${activeCategory?.name === category.name ? 'text-emerald-700' : 'text-gray-600 group-hover:text-emerald-700'}`}>
                       {category.name}
                     </span>
                   </div>
-                  {category.subCategories && (
+                  {category.children && (
                     <ChevronRight className={`w-3 h-3 transition-colors ${activeCategory?.name === category.name ? 'text-emerald-400' : 'text-gray-300 group-hover:text-emerald-400'}`} />
                   )}
                 </button>
@@ -51,7 +74,7 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
         </div>
 
         <button 
-          onClick={onViewAll}
+          onClick={onViewAll || (() => {})}
           className="w-full px-6 py-3 text-center text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-50 transition-colors border-t border-gray-50 bg-white"
         >
           View All Categories
@@ -59,7 +82,7 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
       </div>
 
       {/* Flyout Menu - Positioned outside the overflow-hidden box */}
-      {activeCategory && activeCategory.subCategories && (
+      {activeCategory && activeCategory.children && (
         <div 
           onMouseEnter={() => setActiveCategory(activeCategory)}
           onMouseLeave={() => {
@@ -68,18 +91,18 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
           }}
           className="absolute left-full top-0 w-[500px] bg-white border border-gray-100 shadow-xl rounded-r-xl z-[150] p-6 grid grid-cols-2 gap-8 h-[385px] overflow-y-auto custom-sidebar-scrollbar"
         >
-          {activeCategory.subCategories.map((sub: any) => (
+          {activeCategory.children.map((sub: any) => (
             <div key={sub.name} className="space-y-3">
               <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest border-b border-gray-50 pb-2">
                 {sub.name}
               </h3>
               <div className="flex flex-col gap-2">
-                {sub.childCategories.map((child: string) => (
+                {sub.children?.map((child: any) => (
                   <button 
-                    key={child}
+                    key={typeof child === 'string' ? child : child?.id || child?.name}
                     className="text-[10px] font-medium text-gray-500 hover:text-emerald-600 transition-colors text-left"
                   >
-                    {child}
+                    {typeof child === 'string' ? child : child?.name}
                   </button>
                 ))}
               </div>

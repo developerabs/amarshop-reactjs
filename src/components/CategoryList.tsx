@@ -1,10 +1,31 @@
-import { CATEGORIES } from "../data/mockData";
 import { motion } from "motion/react";
 import { ChevronRight } from "lucide-react";
+import api from "../services/api";
+import { useEffect, useState } from "react";
 
 export default function CategoryList({ onSeeMoreClick }: { onSeeMoreClick?: () => void }) {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get("/categories");
+        if (response.data.success && response.data.data.categories) {
+          setCategories(response.data.data.categories.slice(0, 11));
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Show 11 categories + 1 "See More" to fill 12 columns on desktop
-  const displayCategories = CATEGORIES.slice(0, 11);
+  const displayCategories = categories;
 
   return (
     <section className="py-2 sm:py-4 bg-white border-b border-gray-50">

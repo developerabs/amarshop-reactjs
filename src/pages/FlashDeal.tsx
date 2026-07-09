@@ -1,10 +1,43 @@
 import { motion } from "motion/react";
 import { getFlashDeals } from "../lib/dataService";
 import ProductCard from "../components/ProductCard";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import type { Product } from "../types";
 
 export default function FlashDeal() {
-  const deals = getFlashDeals();
+  const [deals, setDeals] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchFlashDeals = async () => {
+      try {
+        const response = await api.get("/home/products?type=flash-deals");
+        if (response.data.success) {
+          const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number }) => ({
+            ...p,
+            id: String(p.id),
+            slug: p.slug,
+            name: p.name,
+            price: parseFloat(p.price),
+            salePrice: parseFloat(p.sale_price),
+            flashPrice: Math.floor(parseFloat(p.price) * 0.8),
+            category: p.category_name,
+            image: p.images?.[0] ?? '',
+            available: p.total_stock,
+            discountAmount: parseFloat(p.discount_amount),
+            discountType: p.discount_type,
+            rating: typeof p.rating === 'string' ? parseFloat(p.rating) : (p.rating ?? 0),
+            reviews: typeof p.reviews === 'string' ? parseInt(String(p.reviews), 10) : (p.reviews ?? 0),
+          }));
+          setDeals(deals);
+        }
+      } catch (error) {
+        console.error("Failed to fetch flash deals:", error);
+      }
+    };
+
+    fetchFlashDeals();
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);

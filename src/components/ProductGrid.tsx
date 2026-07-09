@@ -43,9 +43,9 @@ export default function ProductGrid({ title, highlightWord, type, onAddToCart }:
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get(`/product/home-products?type=${type}`);
+        const response = await api.get(`/home/products?type=${type}`);
         if (response.data.success) {
-          const deals = response.data.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number }) => ({
+          const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number }) => ({
             ...p,
             id: String(p.id),
             slug: p.slug,

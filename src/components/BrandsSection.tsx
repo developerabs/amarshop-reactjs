@@ -1,10 +1,32 @@
+import { useState, useEffect } from "react";
 import { BRANDS } from "../data/mockData";
 import { motion } from "motion/react";
 import { ChevronRight } from "lucide-react";
+import api from "../services/api";
 
 export default function BrandsSection() {
+  const [brands, setBrands] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await api.get("/brands");
+        if (response.data.success && response.data.data.brands) {
+          setBrands(response.data.data.brands.slice(0, 11));
+        }
+      } catch (error) {
+        console.error("Failed to fetch brands:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
   // Show 11 brands + 1 "See More" to fill 12 columns on desktop
-  const displayBrands = BRANDS.slice(0, 11);
+  const displayBrands = brands;
 
   return (
     <section className="py-2 sm:py-4 bg-white border-b border-gray-50">

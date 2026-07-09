@@ -35,9 +35,9 @@ export default function FlashDeals() {
   useEffect(() => {
     const fetchFlashDeals = async () => {
       try {
-        const response = await api.get('/product/home-products?type=flash-deals');
+        const response = await api.get('/home/products?type=flash-deals');
         if (response.data.success) {
-          const deals = response.data.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string  }) => ({
+          const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string  }) => ({
             ...p,
             id: String(p.id),
             slug: p.slug,
