@@ -49,6 +49,10 @@ function AppShell() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCategoryOverlayOpen, setIsCategoryOverlayOpen] = useState(false);
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
+  const [authChecked, setAuthChecked] = useState(() => {
+    const accessToken = localStorage.getItem('access_token');
+    return !!accessToken;
+  });
 
   const { cartItems, updateCartQuantity, removeFromCart, addToCart } = useCommerce();
 
@@ -62,7 +66,13 @@ function AppShell() {
       <Navbar
         onCartClick={() => setIsCartOpen(true)}
         onWishlistClick={() => setIsWishlistOpen(true)}
-        onProfileClick={() => setIsProfileOpen(true)}
+        onProfileClick={() => {
+          if (authChecked) {
+            setIsProfileOpen(true);
+          } else {
+            navigate('/login');
+          }
+        }}
       />
       <SubNavbar onCategoriesClick={() => setIsCategoryOverlayOpen(true)} />
 

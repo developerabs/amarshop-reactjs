@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin } from "lucide-react";
+import api from "../services/api";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ export default function Register() {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
@@ -39,15 +40,34 @@ export default function Register() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await api.post("auth/register", {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
+        address: formData.address
+      });
+
+      if (response.data.success) {
+        console.log("Registration successful:", response.data);
+        localStorage.setItem("access_token", response.data.data.access_token);
+        setTimeout(() => {
+          window.location.href = "/";
+        });
+      }
+    } catch (err: any) {
+      console.error("Registration failed:", err.response?.data?.message || err.message);
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
       setIsLoading(false);
-      navigate("/login", { state: { message: "Account created successfully! Please log in." } });
-    }, 2000);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     setFormData(prev => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value

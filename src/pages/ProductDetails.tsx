@@ -137,7 +137,7 @@ export default function ProductDetails() {
 
     const requestSlug = productSlug || productName;
 
-    api.get(`/product/details/${requestSlug}`)
+    api.get(`/products/details/${requestSlug}`)
       .then((response) => {
         const data = response?.data;
         const rawProduct = data?.data?.product ?? data?.data ?? data?.product;

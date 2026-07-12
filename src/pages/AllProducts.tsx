@@ -29,6 +29,22 @@ interface Brand {
   id: number;
   name: string;
 }
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  flashPrice: number;
+  category: string;
+  images: string[];
+  image: string;
+  available: number;
+  salePrice: number;
+  discountAmount: number;
+  discountType: string;
+  rating: number;
+  reviews: number;
+};
 
 export default function AllProducts() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -42,7 +58,7 @@ const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
 
   const [priceRange, setPriceRange] = useState<{label: string, min: number, max: number} | null>(null);
  
-  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchCategories = async () => {

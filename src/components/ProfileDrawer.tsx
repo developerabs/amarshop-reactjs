@@ -2,6 +2,8 @@ import { X, User, Settings, Package, Heart, LogOut, ChevronRight, Bell, Shield, 
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
+import api from "../services/api";
+import { useState, useEffect } from "react";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -10,12 +12,32 @@ interface ProfileDrawerProps {
 
 export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const navigate = useNavigate();
+  const accessToken = localStorage.getItem("access_token");
+  const authChecked = accessToken ? true : false;
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout", {}, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      localStorage.removeItem("access_token");
+      onClose();
+      setTimeout(() => {
+          window.location.href = "/";
+      });
+    }
+  }
+  const [userInfo, setUserInfo] = useState<any>(null);
   const user = {
-    name: "Niloy Banik",
-    email: "niloybanik084@gmail.com",
-    avatar: "https://picsum.photos/seed/user123/200/200",
-    phone: "+880 1234 567890",
-    memberSince: "April 2024"
+    name: userInfo?.name,
+    email: userInfo?.email,
+    avatar: userInfo?.avatar,
+    phone: userInfo?.phone,
+    memberSince: userInfo?.memberSince
   };
 
   const menuItems = [
@@ -27,6 +49,28 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     { icon: Shield, label: "Privacy & Security", color: "text-gray-600", bg: "bg-gray-100" },
     { icon: Settings, label: "Account Settings", color: "text-gray-600", bg: "bg-gray-100" },
   ];
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await api.get("/profile", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        if (response.data.success) {
+          console.log("User Info:", response.data.data.user);
+          setUserInfo(response.data.data.user);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (authChecked) {
+      fetchUserInfo();
+    }
+  }, [authChecked]);
+
 
   return (
     <AnimatePresence>
@@ -138,7 +182,7 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-              <button className="w-full py-3 rounded-xl bg-white border border-red-100 text-red-600 font-black text-[10px] shadow-sm hover:bg-red-50 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2 group">
+              <button onClick={handleLogout} className="w-full py-3 rounded-xl bg-white border border-red-100 text-red-600 font-black text-[10px] shadow-sm hover:bg-red-50 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2 group">
                 <LogOut className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
                 Logout Account
               </button>

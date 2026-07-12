@@ -28,13 +28,13 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
   const toggleWishlist = onToggleWishlist ?? commerce.toggleWishlist;
 
   const handleProductClick = () => {
-    const slug = slugify(product.name);
+    const slug = product.slug;
     navigate(`/product/${slug}`);
   };
 
   const handleShare = async (e: MouseEvent) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/product/${slugify(product.name)}`;
+    const url = `${window.location.origin}/product/${product.slug}`;
     
     if (navigator.share) {
       try {

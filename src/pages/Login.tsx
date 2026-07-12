@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import api from "../services/api";
 
-export default function Login() {
+interface LoginProps {
+  setIsProfileOpen: (value: boolean) => void;
+}
+
+export default function Login({ setIsProfileOpen }: LoginProps) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -26,8 +31,19 @@ export default function Login() {
     setError("");
 
     try{
-      await loginUser(formData.email, formData.password);
-      navigate(from, { replace: true });
+      const response = await api.post("auth/login", {
+        email: formData.email,
+        password: formData.password
+      });
+      if (response.data.success) {
+        localStorage.setItem("access_token", response.data.data.access_token);
+        if (setIsProfileOpen) {
+          setIsProfileOpen(true);
+        }
+        setTimeout(() => {
+          window.location.href = from === "/" ? "/" : from;
+        });
+      }
     }
     catch(error){
       setError("Invalid email or password");
