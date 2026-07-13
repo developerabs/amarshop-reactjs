@@ -131,7 +131,8 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       const cartItem: CartItem = {
         ...product,
         quantity: 1,
-        variation: "Default"
+        variation: "Default",
+        image: product.images?.[0] ?? ''
       };
       return [...current, cartItem];
     });
