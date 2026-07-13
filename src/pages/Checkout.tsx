@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  ArrowLeft, CreditCard, Truck, MapPin, Phone, Mail, User, Check, 
+  ArrowLeft, CreditCard, Truck, MapPin, Phone, User, Check, 
   ShieldCheck, Zap, Wallet, ChevronRight, Lock, AlertCircle, ChevronDown
 } from "lucide-react";
 import { useCommerce } from "../context/CommerceContext";
 import { useNotifications } from "../context/NotificationContext";
 import SEO from "../components/SEO";
 import { cn, formatPrice } from "../lib/utils";
+import api from "../services/api";
 
 interface CheckoutForm {
   firstName: string;
@@ -28,7 +29,8 @@ interface CheckoutForm {
 export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, cartTotal, clearCart } = useCommerce();
-  const { showNotification } = useNotifications();
+  const accessToken = localStorage.getItem("access_token");
+  const authChecked = accessToken ? true : false;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutForm>({
@@ -76,7 +78,7 @@ export default function Checkout() {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
     } else {
-      showNotification("Please fill in all required fields.", "error");
+      console.log("Please fill in all required fields.");
     }
   };
 
@@ -86,18 +88,47 @@ export default function Checkout() {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) {
-      showNotification("Please select a payment method.", "error");
+      console.log("Please select a payment method.");
       return;
     }
 
     setIsProcessing(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const payload = {
+        shipping_address: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone,
+          email: formData.email,
+          country: "Bangladesh",
+          division: formData.city,
+          district: formData.city,
+          thana: "dhaka",
+          address: formData.address,
+          postal_code: formData.postalCode,
+        },
+        payment_method: formData.paymentMethod === 'cod' ? 'cash_on_delivery' : formData.paymentMethod,
+        notes: "",
+        products: cartItems.map((item) => ({
+          product_id: item.id,
+          product_variant_id: null,
+          quantity: item.quantity,
+        })),
+      };
+
+      const response = await api.post('/checkout/place-order', payload , {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      
       setIsProcessing(false);
       setIsSuccess(true);
       clearCart();
-      showNotification("Order placed successfully!", "success");
-    }, 2500);
+      console.log("Order placed successfully:", response.data);
+    } catch (error) {
+      setIsProcessing(false);
+      console.error("Order submission error:", error);
+    }
   };
 
   const steps = [
