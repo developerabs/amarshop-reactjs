@@ -12,7 +12,9 @@ interface CategoryOverlayProps {
 }
 
 interface FlatCategory {
+  id?: number;
   name: string;
+  slug?: string;
   image: string;
 }
 
@@ -56,7 +58,9 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
     const flattenCategories = (items: CategoryData[]) => {
       items.forEach(parent => {
         flat.push({ 
-          name: parent.name, 
+          id: parent.id,
+          name: parent.name,
+          slug: parent.slug,
           image: parent.image 
         });
         if (parent.children && parent.children.length > 0) {
@@ -136,17 +140,17 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-x-4 gap-y-8">
                 {filteredCategories.map((cat, idx) => (
                   <motion.button
-                    key={cat.name}
+                    key={cat.id}
                     onClick={() => {
                       commerce.setCategoryFilter(cat.name);
                       commerce.setSearchQuery("");
                       onClose();
-                      navigate(`/search?category=${encodeURIComponent(cat.name)}`);
+                      navigate(`/allproducts?category=${cat.slug}`);
                     }}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: Math.min(idx * 0.01, 0.5) }}
-                    className="group flex flex-col items-center gap-3"
+                    className="group flex flex-col items-center gap-3 cursor-pointer"
                   >
                     <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-full p-1 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-50 group-hover:shadow-emerald-500/20 group-hover:border-emerald-200 transition-all duration-300">
                       <div className="w-full h-full rounded-full overflow-hidden">

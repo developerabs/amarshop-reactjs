@@ -10,6 +10,14 @@ import { useNotifications } from "../context/NotificationContext";
 import SEO from "../components/SEO";
 import { cn, formatPrice } from "../lib/utils";
 import api from "../services/api";
+import { v4 as uuidv4 } from "uuid";
+
+let guestId: string = localStorage.getItem("guest_id") || '';
+
+if (!guestId) {
+    guestId = uuidv4();
+    localStorage.setItem("guest_id", guestId);
+}
 
 interface CheckoutForm {
   firstName: string;
@@ -24,6 +32,7 @@ interface CheckoutForm {
   expiryDate?: string;
   cvv?: string;
   saveInfo: boolean;
+  guest_id: string;
 }
 
 export default function Checkout() {
@@ -43,6 +52,7 @@ export default function Checkout() {
     postalCode: '',
     paymentMethod: 'cod',
     saveInfo: false,
+    guest_id: guestId,
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -113,6 +123,7 @@ export default function Checkout() {
           product_variant_id: null,
           quantity: item.quantity,
         })),
+        guest_id: formData.guest_id,
       };
 
       const response = await api.post('/checkout/place-order', payload , {

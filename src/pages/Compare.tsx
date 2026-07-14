@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCommerce } from "../context/CommerceContext";
 import { formatPrice } from "../lib/utils";
 import { Star, X, ShoppingCart, ArrowLeftRight } from "lucide-react";
@@ -7,14 +7,22 @@ import { useNavigate } from "react-router-dom";
 import SEO from "../components/SEO";
 
 export default function Compare() {
-  const { compareItems, toggleCompareItem, getProduct, addToCart } = useCommerce();
+  const { compareItems, toggleCompareItem, getProductById, addToCart } = useCommerce();
   const navigate = useNavigate();
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const products = compareItems.map(id => getProduct(id)).filter(Boolean);
+  useEffect(() => {
+    const loadProducts = async () => {
+      const productPromises = compareItems.map(id => getProductById(id));
+      const loadedProducts = await Promise.all(productPromises);
+      setProducts(loadedProducts.filter(Boolean));
+    };
+    loadProducts();
+  }, [compareItems]);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-20 pt-28">
@@ -75,7 +83,7 @@ export default function Compare() {
                             <X className="w-4 h-4" />
                           </button>
                           <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-gray-50">
-                            <img src={product!.image} alt={product!.name} className="w-full h-full object-cover" />
+                            <img src={product!.thumbnail} alt={product!.name} className="w-full h-full object-cover" />
                           </div>
                           <h3 className="text-sm font-black text-gray-900 line-clamp-2 h-10 mb-2">{product!.name}</h3>
                           <p className="text-xl font-black text-emerald-600">{formatPrice(product!.price)}</p>

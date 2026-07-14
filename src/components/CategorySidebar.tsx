@@ -1,16 +1,19 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 interface Category {
   id: number;
   name: string;
   slug: string;
+  icon: string;
   image: string;
   children?: Category[];
 }
 
 export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void }) {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
@@ -43,10 +46,10 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
       <div className="w-full h-full bg-white border border-gray-100 rounded-xl shadow-sm flex flex-col overflow-hidden">
         <div className="py-2 overflow-y-auto flex-1 min-h-0 relative custom-sidebar-scrollbar">
           {allCategories.map((category, idx) => {
-            // const IconComponent = category.icon;
+            const IconComponent = ChevronRight;
             return (
               <div 
-                key={category.name}
+                key={category.slug}
                 onMouseEnter={() => {
                   setActiveCategory(category);
                   setHoverIndex(idx);
@@ -54,11 +57,12 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
                 className="relative"
               >
                 <button
-                  className={`w-full flex items-center justify-between px-6 py-2.5 hover:bg-emerald-50 group transition-colors text-left ${activeCategory?.name === category.name ? 'bg-emerald-50' : ''}`}
+                  onClick={() => navigate(`/allproducts?category=${category.slug}`)}
+                  className={`w-full flex items-center justify-between px-6 py-2.5 hover:bg-emerald-50 group transition-colors text-left  cursor-pointer ${activeCategory?.name === category.name ? 'bg-emerald-50' : ''}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all border ${activeCategory?.name === category.name ? 'bg-white text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-400 border-transparent group-hover:bg-white group-hover:text-emerald-600 group-hover:border-emerald-100'}`}>
-                      {/* <IconComponent className="w-3.5 h-3.5" /> */}
+                      <IconComponent />
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${activeCategory?.name === category.name ? 'text-emerald-700' : 'text-gray-600 group-hover:text-emerald-700'}`}>
                       {category.name}
@@ -93,14 +97,15 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
         >
           {activeCategory.children.map((sub: any) => (
             <div key={sub.name} className="space-y-3">
-              <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest border-b border-gray-50 pb-2">
+              <h3 onClick={() => navigate(`/allproducts?category=${sub.slug}`)} className="text-[11px] font-black text-gray-900 uppercase tracking-widest border-b border-gray-50 pb-2 cursor-pointer">
                 {sub.name}
               </h3>
               <div className="flex flex-col gap-2">
                 {sub.children?.map((child: any) => (
                   <button 
                     key={typeof child === 'string' ? child : child?.id || child?.name}
-                    className="text-[10px] font-medium text-gray-500 hover:text-emerald-600 transition-colors text-left"
+                    onClick={() => navigate(`/allproducts?category=${child.slug}`)}
+                    className="text-[10px] font-medium text-gray-500 hover:text-emerald-600 transition-colors text-left cursor-pointer"
                   >
                     {typeof child === 'string' ? child : child?.name}
                   </button>

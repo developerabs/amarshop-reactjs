@@ -29,6 +29,7 @@ interface CommerceContextValue {
   setCategoryFilter: (category: string) => void;
   clearFilters: () => void;
   getProduct: (value: string) => Promise<Product | undefined>;
+  getProductById: (id: string) => Promise<Product | undefined>;
   filterProducts: (options?: { query?: string; category?: string }) => Product[];
   addRecentView: (productId: string) => void;
   wishlistCount: number;
@@ -132,7 +133,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
         ...product,
         quantity: 1,
         variation: "Default",
-        image: product.images?.[0] ?? ''
+        image: product.thumbnail ?? ''
       };
       return [...current, cartItem];
     });
@@ -206,7 +207,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
   const toggleCompareItem = useCallback(async (productId: string) => {
     const product = await getProductById(productId);
     if (!product) return;
-
+    
     setCompareItems((current) => {
       const isIncluded = current.includes(productId);
       if (!isIncluded && current.length >= 4) {
@@ -261,12 +262,13 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       setCategoryFilter,
       clearFilters,
       getProduct,
+      getProductById,
       filterProducts,
       addRecentView,
       wishlistCount,
       clearCart,
     }),
-    [cartItems, wishlist, recentViews, compareItems, searchQuery, categoryFilter, cartCount, cartTotal, addToCart, removeFromCart, updateCartQuantity, toggleWishlist, isInWishlist, toggleCompareItem, isInCompare, clearFilters, getProduct, filterProducts, addRecentView, wishlistCount, clearCart]
+    [cartItems, wishlist, recentViews, compareItems, searchQuery, categoryFilter, cartCount, cartTotal, addToCart, removeFromCart, updateCartQuantity, toggleWishlist, isInWishlist, toggleCompareItem, isInCompare, clearFilters, getProduct, getProductById, filterProducts, addRecentView, wishlistCount, clearCart]
   );
 
   return (

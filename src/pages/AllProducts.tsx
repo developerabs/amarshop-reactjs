@@ -50,16 +50,24 @@ export default function AllProducts() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("newest");
-const [categories, setCategories] = useState<Category[]>([]);
-const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
 
-const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
 
   const [priceRange, setPriceRange] = useState<{label: string, min: number, max: number} | null>(null);
  
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categorySlug = urlParams.get("category");
+    if (categorySlug) {
+      setSelectedCategorySlug(categorySlug);
+    }
+  }, []);
   useEffect(() => {
     const fetchCategories = async () => {
         try {
@@ -95,42 +103,46 @@ const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
       try {
         const params: any = {};
 
-    if (selectedCategory) {
-        params.category_id = selectedCategory;
-    }
-
-    if (selectedBrands.length) {
-        params.brand_id = selectedBrands[0];
-    }
-
-    if (priceRange) {
-        params.min_price = priceRange.min;
-
-        if (priceRange.max !== Infinity) {
-            params.max_price = priceRange.max;
+        if (selectedCategory) {
+            params.category_id = selectedCategory;
+        } 
+        if (selectedCategorySlug) {
+            params.category_slug = selectedCategorySlug;
         }
-    }
 
-    switch (sortBy) {
-        case "newest":
-            params.sort_by = "created_at";
-            break;
+        if (selectedBrands.length) {
+            params.brand_id = selectedBrands[0];
+        }
 
-        case "price-asc":
-            params.sort_by = "sale_price";
-            params.order = "asc";
-            break;
+        if (priceRange) {
+            params.min_price = priceRange.min;
 
-        case "price-desc":
-            params.sort_by = "sale_price";
-            params.order = "desc";
-            break;
+            if (priceRange.max !== Infinity) {
+                params.max_price = priceRange.max;
+            }
+        }
 
-        default:
-            break;
-    }
+        switch (sortBy) {
+            case "newest":
+                params.sort_by = "created_at";
+                break;
+
+            case "price-asc":
+                params.sort_by = "sale_price";
+                params.order = "asc";
+                break;
+
+            case "price-desc":
+                params.sort_by = "sale_price";
+                params.order = "desc";
+                break;
+
+            default:
+                break;
+        }
         
         const response = await api.get("/products/all-products", { params });
+        // console.log("Fetched products:", response);
         if (response.data.success) {
           const featchProducts = response.data.data.products.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number }) => ({
             ...p,
@@ -156,7 +168,7 @@ const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
     };
 
     fetchAllProducts();
-  }, [selectedCategory, selectedBrands, priceRange, sortBy]);
+  }, [selectedCategory, selectedCategorySlug, selectedBrands, priceRange]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -164,6 +176,7 @@ const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
 
   const clearFilters = () => {
     setSelectedCategory(null);
+    setSelectedCategorySlug(null);
     setSelectedBrands([]);
     setPriceRange(null);
   };
@@ -237,11 +250,14 @@ const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
                   {categories.map(category  => (
                     <button 
                       key={category.id}
-                      onClick={() => setSelectedCategory(
+                      onClick={() => {
+                        setSelectedCategory(
                           selectedCategory === category.id
                               ? null
                               : category.id
-                      )}
+                        );
+                        setSelectedCategorySlug(null);
+                      }}
                       className={cn(
                         "w-full flex items-center justify-between text-xs font-bold uppercase tracking-widest py-2 px-3 rounded-xl transition-all",
                         (selectedCategory === category.id) 

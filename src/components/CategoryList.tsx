@@ -2,8 +2,10 @@ import { motion } from "motion/react";
 import { ChevronRight } from "lucide-react";
 import api from "../services/api";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function CategoryList({ onSeeMoreClick }: { onSeeMoreClick?: () => void }) {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +53,8 @@ export default function CategoryList({ onSeeMoreClick }: { onSeeMoreClick?: () =
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.02 }}
               viewport={{ once: true }}
-              className="group flex flex-col items-center gap-1.5"
+              className="group flex flex-col items-center gap-1.5 cursor-pointer"
+              onClick={() => navigate(`/allproducts?category=${category.slug}`)}
             >
               <div className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-gray-50 border border-gray-100 group-hover:border-emerald-500/30 transition-all duration-300 overflow-hidden p-1 shadow-sm">
                 <div className="w-full h-full rounded-full overflow-hidden">

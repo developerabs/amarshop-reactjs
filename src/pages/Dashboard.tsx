@@ -11,6 +11,14 @@ import { cn, formatPrice } from "../lib/utils";
 import ProductCard from "../components/ProductCard";
 import { getProducts } from "../lib/dataService";
 import api from "../services/api";
+import { v4 as uuidv4 } from "uuid";
+
+let guestId: string = localStorage.getItem("guest_id") || '';
+
+if (!guestId) {
+    guestId = uuidv4();
+    localStorage.setItem("guest_id", guestId);
+}
 
 interface Order {
   id: string;
@@ -56,7 +64,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await api.get("/profile/orders", {
+        const response = await api.get(`/profile/orders?guest_id=${guestId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`
           }
