@@ -106,8 +106,7 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("description");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!productName) {
@@ -232,8 +231,15 @@ export default function ProductDetails() {
 
   useEffect(() => {
     if (!product) return;
-    setSelectedColor(product.attributes?.Color?.[0] ?? "");
-    setSelectedSize(product.attributes?.Size?.[0] ?? "");
+    const initialAttributes: Record<string, string> = {};
+    if (product.attributes) {
+      Object.entries(product.attributes).forEach(([key, values]) => {
+        if (Array.isArray(values) && values.length > 0) {
+          initialAttributes[key] = values[0];
+        }
+      });
+    }
+    setSelectedAttributes(initialAttributes);
   }, [product]);
 
   const isValidImage = (value: unknown): value is string => {
@@ -252,14 +258,12 @@ export default function ProductDetails() {
     ? [mainImage, ...galleryImages].filter((img, index, arr) => Boolean(img) && arr.indexOf(img) === index)
     : galleryImages;
 
-  const productImage = images[0] ?? null;
-
-  const selectedVariant = product?.variants?.find(
-    (variant) =>
-      Boolean(variant.attributes) &&
-      variant.attributes?.Color === selectedColor &&
-      variant.attributes?.Size === selectedSize
-  );
+  const selectedVariant = product?.variants?.find((variant) => {
+    if (!Boolean(variant.attributes)) return false;
+    return Object.entries(selectedAttributes).every(
+      ([key, value]) => variant.attributes?.[key] === value
+    );
+  });
 
   const displayedPrice = selectedVariant
     ? Number(selectedVariant.price)
@@ -270,8 +274,7 @@ export default function ProductDetails() {
   const categoryName = product?.category?.name ?? "Uncategorized";
   const brandName = product?.brand?.name ?? null;
 
-  const colorOptions = product?.attributes?.Color ?? [];
-  const sizeOptions = product?.attributes?.Size ?? [];
+  const attributeOptions = product?.attributes ?? {};
   const productDescription =
     product?.short_description ||
     product?.description ||
@@ -448,36 +451,23 @@ export default function ProductDetails() {
 
               {/* Selection Grids */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select color</label>
-                  <div className="flex flex-wrap gap-2">
-                    {colorOptions.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedColor === color ? "bg-gray-900 text-white border-gray-900 shadow-xl" : "bg-white text-gray-400 border-gray-100 hover:border-emerald-200"}`}
-                      >
-                        {color}
-                      </button>
-                    ))}
-                    {!colorOptions.length && <span className="text-xs text-gray-400">No color options available</span>}
+                {Object.entries(attributeOptions).map(([attributeName, options]) => (
+                  <div key={attributeName} className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{attributeName}</label>
+                    <div className="flex flex-wrap gap-2">
+                      {options.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => setSelectedAttributes((prev) => ({ ...prev, [attributeName]: option }))}
+                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedAttributes[attributeName] === option ? "bg-gray-900 text-white border-gray-900 shadow-xl" : "bg-white text-gray-400 border-gray-100 hover:border-emerald-200"}`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                      {!options.length && <span className="text-xs text-gray-400">No {attributeName.toLowerCase()} options available</span>}
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select size</label>
-                  <div className="flex flex-wrap gap-2">
-                    {sizeOptions.map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center text-xs font-black transition-all border-2 ${selectedSize === size ? "bg-gray-900 text-white border-gray-900 shadow-xl scale-110" : "bg-white text-gray-400 border-gray-100 hover:border-emerald-200"}`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                    {!sizeOptions.length && <span className="text-xs text-gray-400">No size options available</span>}
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* Quantity and CTA */}
@@ -500,7 +490,7 @@ export default function ProductDetails() {
 
                 <button
                   onClick={() => {
-                    for (let i = 0; i < quantity; i++) addToCart(String(product.id));
+                    addToCart(String(product.id), quantity, selectedVariant?.id ? String(selectedVariant.id) : undefined);
                   }}
                   className="flex-1 flex items-center justify-center gap-3 px-8 py-5 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all active:scale-95 shadow-2xl shadow-emerald-200 group"
                 >
@@ -512,7 +502,7 @@ export default function ProductDetails() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
-                    addToCart(String(product.id));
+                    addToCart(String(product.id), quantity, selectedVariant?.id ? String(selectedVariant.id) : undefined);
                     navigate('/checkout');
                   }}
                   className="flex-1 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2"
@@ -626,41 +616,6 @@ export default function ProductDetails() {
                         <span className="font-black text-gray-900 text-sm">{spec.value}</span>
                       </div>
                     ))}
-                  </div>
-                )}
-
-                {activeTab === 'variants' && (
-                  <div className="space-y-12">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {(product.variants ?? []).map((variant) => (
-                        <div key={variant.id} className="p-8 bg-white border border-gray-100 rounded-[2.5rem] shadow-xl space-y-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="text-sm text-gray-400 uppercase tracking-widest font-black">{variant.name}</p>
-                              <p className="text-2xl font-black text-gray-900">{formatPrice(Number(variant.price))}</p>
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-widest text-gray-500">{variant.stock} pcs</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            {Object.entries(variant.attributes ?? {}).map(([key, value]) => (
-                              <div key={key} className="p-4 bg-gray-50 rounded-3xl text-sm font-bold text-gray-700">
-                                <span className="block text-[10px] text-gray-400 uppercase tracking-widest">{key}</span>
-                                {value}
-                              </div>
-                            ))}
-                          </div>
-                          <button
-                            onClick={() => {
-                              setSelectedColor(variant.attributes?.Color ?? selectedColor);
-                              setSelectedSize(variant.attributes?.Size ?? selectedSize);
-                            }}
-                            className="w-full px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all"
-                          >
-                            Select This Variant
-                          </button>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )}
               </motion.div>

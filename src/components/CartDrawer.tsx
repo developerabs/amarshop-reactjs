@@ -9,6 +9,8 @@ interface CartItem {
   image: string;
   quantity: number;
   category: string;
+  variation: string;
+  variationId?: string;
 }
 
 interface CartDrawerProps {
@@ -93,6 +95,7 @@ export default function CartDrawer({
                           <h3 className="text-xs font-bold text-gray-900 line-clamp-1 leading-tight group-hover:text-emerald-600 transition-colors">
                             {item.name}
                           </h3>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{item.variation}</p>
                           <button 
                             onClick={() => onRemove(item.id)}
                             aria-label={`Remove ${item.name} from cart`}

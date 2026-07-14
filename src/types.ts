@@ -4,6 +4,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  thumbnail?: string;
   category: string;
   rating: number;
   reviews: number;
@@ -11,6 +12,15 @@ export interface Product {
   discount?: number;
   soldCount?: string;
   inStock?: boolean;
+  variation?: string;
+  variationId?: string;
+  category_name?: string;
+  sale_price?: number;
+  variants?: Array<{
+    id: number;
+    name: string;
+    price: number;
+  }>;
 }
 
 export interface Category {

@@ -7,6 +7,8 @@ import api from "../services/api";
 export interface CartItem extends Product {
   quantity: number;
   variation: string;
+  variationId?: string;
+  category: string;
 }
 
 interface CommerceContextValue {
@@ -18,7 +20,7 @@ interface CommerceContextValue {
   categoryFilter: string;
   cartCount: number;
   cartTotal: number;
-  addToCart: (productId: string) => void;
+  addToCart: (productId: string, quantity?: number, variantId?: string) => void;
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, delta: number) => void;
   toggleWishlist: (productId: string) => void;
@@ -109,7 +111,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
 
   const { addNotification } = useNotifications();
 
-  const addToCart = useCallback(async (productId: string) => {
+  const addToCart = useCallback(async (productId: string, quantity: number = 1, variantId?: string) => {
     const product = await getProductById(productId);
     if (!product) {
       addNotification({
@@ -125,15 +127,27 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       if (existing) {
         return current.map((item) =>
           item.id === productId
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
+      
+      let variantPrice = product.sale_price || product.price;
+      if (variantId && product.variants) {
+        const variant = product.variants.find((v: any) => v.id === parseInt(variantId));
+        if (variant) {
+          variantPrice = variant.price;
+        }
+      }
+      
       const cartItem: CartItem = {
         ...product,
-        quantity: 1,
-        variation: "Default",
-        image: product.thumbnail ?? ''
+        price: typeof variantPrice === 'string' ? parseFloat(variantPrice) : variantPrice,
+        quantity,
+        variationId: variantId ?? '',
+        variation: variantId ? product.variants?.find((v: any) => v.id === parseInt(variantId))?.name || '' : '',
+        image: product.thumbnail ?? '',
+        category: product.category_name ?? '',
       };
       return [...current, cartItem];
     });

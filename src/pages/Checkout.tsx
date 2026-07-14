@@ -40,6 +40,7 @@ export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCommerce();
   const accessToken = localStorage.getItem("access_token");
   const authChecked = accessToken ? true : false;
+  const { addNotification } = useNotifications();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutForm>({
@@ -120,7 +121,7 @@ export default function Checkout() {
         notes: "",
         products: cartItems.map((item) => ({
           product_id: item.id,
-          product_variant_id: null,
+          product_variant_id: item.variationId || null,
           quantity: item.quantity,
         })),
         guest_id: formData.guest_id,
@@ -138,6 +139,11 @@ export default function Checkout() {
       console.log("Order placed successfully:", response.data);
     } catch (error) {
       setIsProcessing(false);
+      addNotification({
+          type: "error",
+          title: "Order Failed",
+          message: "There was an error placing your order. Please try again."
+        });
       console.error("Order submission error:", error);
     }
   };
