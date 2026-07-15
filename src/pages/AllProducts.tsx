@@ -136,6 +136,10 @@ export default function AllProducts() {
                 params.sort_by = "sale_price";
                 params.order = "desc";
                 break;
+            case "rating":
+                params.sort_by = "rating";
+                params.order = "desc";
+                break;
 
             default:
                 break;
@@ -169,7 +173,7 @@ export default function AllProducts() {
     };
 
     fetchAllProducts();
-  }, [selectedCategory, selectedCategorySlug, selectedBrands, priceRange]);
+  }, [selectedCategory, selectedCategorySlug, selectedBrands, priceRange, sortBy]);
 
   useEffect(() => {
     window.scrollTo(0, 0);

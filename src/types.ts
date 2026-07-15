@@ -9,7 +9,8 @@ export interface Product {
   rating: number;
   reviews: number;
   isNew?: boolean;
-  discount?: number;
+  discount_amount?: number;
+  discount_type?: string;
   soldCount?: string;
   inStock?: boolean;
   variation?: string;
@@ -21,6 +22,8 @@ export interface Product {
     name: string;
     price: number;
   }>;
+  tax_rate?: number;
+  tax_type?: string;
 }
 
 export interface Category {

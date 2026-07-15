@@ -33,6 +33,17 @@ interface CheckoutForm {
   cvv?: string;
   saveInfo: boolean;
   guest_id: string;
+  discountCode?: string;
+}
+
+interface PricingDetails {
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  discountPercent: number;
+  discountAmount: number;
+  shippingCost: number;
+  total: number;
 }
 
 export default function Checkout() {
@@ -42,6 +53,43 @@ export default function Checkout() {
   const authChecked = accessToken ? true : false;
   const { addNotification } = useNotifications();
   const [orderConfirmedData, setOrderConfirmedData] = useState<any>(null);
+  const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+  const [shippingCost, setShippingCost] = useState<number>(0);
+
+  // Calculate product-specific tax and discount
+  const calculateProductTax = () => {
+    return cartItems.reduce((total, item) => {
+      const itemSubtotal = item.price * item.quantity;
+      const taxRate = item.tax_rate || 0;
+      const tax = itemSubtotal * (taxRate / 100);
+      return total + parseFloat(tax.toFixed(2));
+    }, 0);
+  };
+
+  const calculateProductDiscount = () => {
+    return cartItems.reduce((total, item) => {
+      const itemSubtotal = item.price * item.quantity;
+      const discountAmount = item.discountAmount || 0;
+      const discountType = item.discountType || '';
+      
+      if (discountType === 'percentage') {
+        const discount = itemSubtotal * (discountAmount / 100);
+        return total + parseFloat(discount.toFixed(2));
+      } else if (discountType === 'fixed') {
+        return total + parseFloat((discountAmount * item.quantity).toFixed(2));
+      }
+      return total;
+    }, 0);
+  };
+
+  const taxAmount = calculateProductTax();
+  const discountAmount = calculateProductDiscount();
+  const discountPercent = cartTotal > 0 ? (discountAmount / cartTotal) * 100 : 0;
+  const taxRate = cartItems.length > 0 ? cartItems[0].tax_rate || 0 : 0;
+  
+  // Calculate total with tax, discount, and shipping
+  const subtotalAfterDiscount = cartTotal - discountAmount;
+  const totalWithTax = parseFloat((subtotalAfterDiscount + taxAmount + shippingCost).toFixed(2));
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutForm>({
@@ -68,6 +116,23 @@ export default function Checkout() {
       navigate('/');
     }
   }, [cartItems, navigate, isSuccess]);
+  useEffect(() => {
+    const fetchShippingOptions = async () => {
+      try {
+        const response = await api.get('/checkout/shipping-charges', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        if (response.data.success) {
+          setShippingOptions(response.data.data.shipping_charges || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch shipping options:', error);
+      }
+    };
+    fetchShippingOptions();
+  }, [accessToken]);
 
   const handleInputChange = (field: keyof CheckoutForm, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -479,6 +544,12 @@ export default function Checkout() {
                       <p className="text-[10px] font-black text-gray-900 uppercase tracking-tight line-clamp-1">{item.name}</p>
                       <p className="text-[9px] font-bold text-gray-400 uppercase">Qty: {item.quantity}</p>
                       <p className="text-xs font-black text-emerald-600">{formatPrice(item.price * item.quantity)}</p>
+                      {item.tax_rate > 0 && (
+                        <p className="text-[8px] font-bold text-orange-600 uppercase">Tax: {item.tax_rate}%</p>
+                      )}
+                      {item.discountAmount > 0 && (
+                        <p className="text-[8px] font-bold text-emerald-600 uppercase">Discount: -{formatPrice(item.discountAmount * item.quantity)}</p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -489,13 +560,37 @@ export default function Checkout() {
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Subtotal</span>
                   <span className="text-xs font-black text-gray-900">{formatPrice(cartTotal)}</span>
                 </div>
+                
+                {discountPercent > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Discount ({discountPercent}%)</span>
+                    <span className="text-xs font-black text-emerald-600">-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Courier Fee</span>
-                  <span className="text-xs font-black text-emerald-600">{cartTotal >= 1000 ? "FREE" : formatPrice(80)}</span>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tax ({(taxRate * 100).toFixed(0)}%)</span>
+                  <span className="text-xs font-black text-gray-900">{formatPrice(taxAmount)}</span>
                 </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shipping</span>
+                  {shippingOptions.length > 0 ? (
+                    <select name="shipping" id="shipping" className="text-xs font-black text-gray-900">
+                      {shippingOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.name} - {formatPrice(option.charge)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-xs font-black text-gray-900">Calculating...</span>
+                  )}
+                </div>
+
                 <div className="flex justify-between items-center pt-4 mt-2 border-t border-gray-900">
                   <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Total Amount</span>
-                  <span className="text-2xl font-black text-gray-900">{formatPrice(cartTotal + (cartTotal >= 1000 ? 0 : 80))}</span>
+                  <span className="text-2xl font-black text-gray-900">{formatPrice(cartTotal)}</span>
                 </div>
               </div>
 

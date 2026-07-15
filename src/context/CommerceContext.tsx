@@ -9,6 +9,11 @@ export interface CartItem extends Product {
   variation: string;
   variationId?: string;
   category: string;
+  image: string;
+  discountAmount: number;
+  discountType: string;
+  tax_rate: number;
+  tax_type: string;
 }
 
 interface CommerceContextValue {
@@ -148,6 +153,10 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
         variation: variantId ? product.variants?.find((v: any) => v.id === parseInt(variantId))?.name || '' : '',
         image: product.thumbnail ?? '',
         category: product.category_name ?? '',
+        discountAmount: typeof product.discount_amount === 'string' ? parseFloat(product.discount_amount) : (product.discount_amount ?? 0),
+        discountType: product.discount_type ?? '',
+        tax_rate: typeof product.tax_rate === 'string' ? parseFloat(product.tax_rate) : (product.tax_rate ?? 0),
+        tax_type: product.tax_type ?? '',
       };
       return [...current, cartItem];
     });
