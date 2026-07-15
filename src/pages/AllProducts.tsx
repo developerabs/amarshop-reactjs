@@ -144,7 +144,7 @@ export default function AllProducts() {
         const response = await api.get("/products/all-products", { params });
         // console.log("Fetched products:", response);
         if (response.data.success) {
-          const featchProducts = response.data.data.products.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number }) => ({
+          const featchProducts = response.data.data.products.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number; thumbnail: string; }) => ({
             ...p,
             id: String(p.id),
             slug: p.slug,
@@ -154,6 +154,7 @@ export default function AllProducts() {
             flashPrice: Math.floor(parseFloat(p.price) * 0.8),
             category: p.category_name,
             image: p.images?.[0] ?? '',
+            thumbnail: p.thumbnail,
             available: p.total_stock,
             discountAmount: parseFloat(p.discount_amount),
             discountType: p.discount_type,

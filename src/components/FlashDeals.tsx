@@ -7,6 +7,7 @@ import { useCommerce } from "../context/CommerceContext";
 import api from "../services/api";
 
 type FlashProduct = {
+  thumbnail?: string;
   id: string;
   name: string;
   slug: string;
@@ -37,7 +38,7 @@ export default function FlashDeals() {
       try {
         const response = await api.get('/home/products?type=flash-deals');
         if (response.data.success) {
-          const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string  }) => ({
+          const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; thumbnail?: string }) => ({
             ...p,
             id: String(p.id),
             slug: p.slug,
@@ -47,6 +48,7 @@ export default function FlashDeals() {
             flashPrice: Math.floor(parseFloat(p.price) * 0.8),
             category: p.category_name,
             image: p.images?.[0] ?? '',
+            thumbnail: p.thumbnail,
             available: p.total_stock,
             discountAmount: parseFloat(p.discount_amount),
             discountType: p.discount_type,
@@ -123,7 +125,7 @@ export default function FlashDeals() {
                 className="aspect-square rounded-2xl overflow-hidden mb-5 relative cursor-pointer"
               >
                 <img 
-                  src={product.images[0]} 
+                  src={product.thumbnail ?? product.images[0]} 
                   alt={product.name} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                   referrerPolicy="no-referrer"

@@ -81,7 +81,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
       {/* Image Container */}
       <div className="relative aspect-4/5 overflow-hidden bg-gray-50">
         <img
-          src={product.image}
+          src={product.thumbnail ?? product.image}
           alt={product.name}
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
@@ -155,7 +155,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-baseline gap-2">
             {/* salePrice may not exist on Product type; fallback to product.price */}
-            <span className="text-xl font-black text-gray-900">{formatPrice((product as any).salePrice ?? product.price)}</span>
+            <span className="text-xl font-black text-gray-900">{formatPrice((product as any).sale_price ?? product.price)}</span>
                     <span className="text-xs text-gray-400 line-through font-medium">{formatPrice(product.price)}</span>
           </div>
           <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">

@@ -41,6 +41,7 @@ export default function Checkout() {
   const accessToken = localStorage.getItem("access_token");
   const authChecked = accessToken ? true : false;
   const { addNotification } = useNotifications();
+  const [orderConfirmedData, setOrderConfirmedData] = useState<any>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutForm>({
@@ -133,6 +134,7 @@ export default function Checkout() {
         }
       });
       
+      setOrderConfirmedData(response.data.data);
       setIsProcessing(false);
       setIsSuccess(true);
       clearCart();
@@ -187,11 +189,11 @@ export default function Checkout() {
           <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 text-left space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order ID</span>
-              <span className="text-xs font-black text-gray-900">AS-982107</span>
+              <span className="text-xs font-black text-gray-900">{orderConfirmedData?.order.order_no ?? 'N/A'}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Est. Delivery</span>
-              <span className="text-xs font-black text-gray-900">May 15 - May 17, 2026</span>
+              <span className="text-xs font-black text-gray-900">{orderConfirmedData?.order.est_delivery ?? 'N/A'}</span>
             </div>
           </div>
 
@@ -323,9 +325,6 @@ export default function Checkout() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
                         { id: 'cod', label: 'Cash on Delivery', sub: 'Pay at Door', icon: Truck },
-                        { id: 'bkash', label: 'bKash', sub: 'Fast & Secure', icon: Phone },
-                        { id: 'nagad', label: 'Nagad', sub: 'Mobile Wallet', icon: Wallet },
-                        { id: 'card', label: 'Credit Card', sub: 'Visa / MC', icon: CreditCard },
                       ].map((method) => (
                         <button
                           key={method.id}

@@ -1,11 +1,12 @@
 import { Search, ShoppingCart, User, Menu, Heart, Phone, Globe, X, ChevronRight, ShoppingBag, Smartphone, Home, Utensils, Baby, Tv, Watch, Truck } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { cn, formatPrice } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { HIERARCHICAL_CATEGORIES } from "../data/categories";
 import { Link, useNavigate } from "react-router-dom";
 import { useCommerce } from "../context/CommerceContext";
 import { useSettings } from "../context/SettingsContext";
+import api from "../services/api";
 
 const MOBILE_NAV_LINKS = [
   { name: "Home", href: "/" },
@@ -20,6 +21,36 @@ type Settings = {
   site_name?: string;
   site_logo?: string;
 };
+type SearchResult = {
+  categories: { 
+    id: string; 
+    name: string 
+    slug: string
+    image?: string
+  }[];
+  brands: {
+    id: string;
+    name: string;
+    slug: string;
+    image?: string;
+  }[];
+  products: {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    flashPrice: number;
+    category: string;
+    images: string[];
+    image: string;
+    available: number;
+    salePrice: number;
+    discountAmount: number;
+    discountType: string;
+    rating: number;
+    reviews: number;
+  }[];
+};
 
 export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }: { onCartClick?: () => void, onWishlistClick?: () => void, onProfileClick?: () => void }) {
   const commerce = useCommerce();
@@ -32,6 +63,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
   const [activeTab, setActiveTab] = useState<'menu' | 'categories'>('menu');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<SearchResult>({ categories: [], brands: [], products: [] });
   const navigate = useNavigate();
 
   const categories = ["All Categories", "Fashion", "Electronics", "Home", "Beauty", "Groceries"];
@@ -46,6 +78,23 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
   };
   
   const { settings } = useSettings() as { settings?: Settings };
+  useEffect(() => {
+    const searchResults = async () => {
+      if (searchQuery.trim() === "") {
+        setSearchResults({ categories: [], brands: [], products: [] });
+        return;
+      }
+      try {
+        const response = await api.get(`/home/search-all?search=${encodeURIComponent(searchQuery.trim())}`);
+        if (response.data.success) {
+          setSearchResults(response.data.data || { categories: [], brands: [], products: [] });
+        }
+      } catch (error) {
+        console.error('Failed to fetch search results:', error);
+      }
+    };
+    searchResults();
+  }, [searchQuery]);
 
   return (
     <>
@@ -172,17 +221,17 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                       <div>
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Popular Searches</p>
                         <div className="flex flex-wrap gap-2">
-                          {['Headphones', 'Smart Watch', 'Nike Shoes', 'iPhone 15', 'Gaming Laptop'].map(tag => (
+                          {searchResults.products.map(product => (
                             <button
-                              key={tag}
+                              key={product.id}
                               onClick={() => {
-                                setSearchQuery(tag);
+                                setSearchQuery(product.name);
                                 setIsSearchFocused(false);
-                                navigate(`/search?q=${encodeURIComponent(tag)}`);
+                                navigate(`/search?q=${encodeURIComponent(product.name)}`);
                               }}
                               className="px-3 py-1.5 rounded-lg bg-gray-50 text-[11px] font-bold text-gray-600 hover:bg-blue-50 hover:text-[#0056b3] transition-all"
                             >
-                              {tag}
+                              {product.name}
                             </button>
                           ))}
                         </div>

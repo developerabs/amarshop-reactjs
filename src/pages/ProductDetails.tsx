@@ -39,6 +39,7 @@ type ProductVariant = {
 type ApiProduct = {
   id: number;
   code: string;
+  model?: string;
   name: string;
   slug: string;
   price: string;
@@ -61,6 +62,24 @@ type ApiProduct = {
   };
   variants?: ProductVariant[];
   attributes?: Record<string, string[]>;
+  details_image: string | null;
+};
+type RelatedProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  flashPrice: number;
+  category: string;
+  images: string[];
+  image: string;
+  thumbnail?: string;
+  available: number;
+  salePrice: number;
+  discountAmount: number;
+  discountType: string;
+  rating: number;
+  reviews: number;
 };
 
 const buildFallbackProduct = (identifier: string | undefined): ApiProduct | null => {
@@ -90,6 +109,7 @@ const buildFallbackProduct = (identifier: string | undefined): ApiProduct | null
     },
     variants: [],
     attributes: {},
+    details_image: localProduct.image,
   };
 };
 
@@ -107,6 +127,7 @@ export default function ProductDetails() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("description");
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
 
   useEffect(() => {
     if (!productName) {
@@ -202,7 +223,7 @@ export default function ProductDetails() {
           image: normalizedImages[0] ?? rawProduct.thumbnail ?? null,
           thumbnail: rawProduct.thumbnail ?? normalizedImages[0] ?? null,
           images: normalizedImages,
-          price: rawProduct.sale_price ?? rawProduct.price ?? "0",
+          price: rawProduct.price ?? rawProduct.sale_price ?? "0",
           cost: rawProduct.cost ?? rawProduct.price ?? "0",
           short_description: rawProduct.short_description ?? rawProduct.description ?? null,
           description: rawProduct.description ?? rawProduct.short_description ?? null,
@@ -222,6 +243,37 @@ export default function ProductDetails() {
       })
       .finally(() => setLoading(false));
   }, [productName]);
+  useEffect(() => {
+    if (!product) return;
+    const fetchRelatedProducts = async () => {
+      try {
+        const response = await api.get(`/products/related-products/${product.id}`);
+        if (response.data.success) {
+          const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number; thumbnail?: string }) => ({
+            ...p,
+            id: String(p.id),
+            slug: p.slug,
+            name: p.name,
+            price: parseFloat(p.price),
+            salePrice: parseFloat(p.sale_price),
+            flashPrice: Math.floor(parseFloat(p.price) * 0.8),
+            category: p.category_name,
+            image: p.images?.[0] ?? '',
+            thumbnail: p.thumbnail,
+            available: p.total_stock,
+            discountAmount: parseFloat(p.discount_amount),
+            discountType: p.discount_type,
+            rating: typeof p.rating === 'string' ? parseFloat(p.rating) : (p.rating ?? 0),
+            reviews: typeof p.reviews === 'string' ? parseInt(String(p.reviews), 10) : (p.reviews ?? 0),
+          }));
+          setRelatedProducts(deals);
+        }
+      } catch (error) {
+        console.error('Failed to fetch related products:', error);
+      }
+    };
+    fetchRelatedProducts();
+  }, [product]);
 
   useEffect(() => {
     if (!product) return;
@@ -273,12 +325,12 @@ export default function ProductDetails() {
   const stockLabel = stockCount > 0 ? `${stockCount} in stock` : "Out of stock";
   const categoryName = product?.category?.name ?? "Uncategorized";
   const brandName = product?.brand?.name ?? null;
+  const modelNumber = product?.model ?? "";
 
   const attributeOptions = product?.attributes ?? {};
-  const productDescription =
-    product?.short_description ||
-    product?.description ||
-    "This premium product is crafted with attention to detail, ready for everyday style and comfort.";
+  const shortDescription = product?.short_description;
+  const productDescription = product?.description;
+  const productDetailsImage = product?.details_image ?? undefined;
 
   const isWishlisted = product ? isInWishlist(String(product.id)) : false;
 
@@ -446,7 +498,7 @@ export default function ProductDetails() {
               </div>
 
               <p className="text-sm text-gray-500 leading-relaxed max-w-xl font-medium italic border-l-4 border-emerald-500 pl-4 bg-gray-50 py-4 rounded-r-2xl">
-                {productDescription}
+                {shortDescription}
               </p>
 
               {/* Selection Grids */}
@@ -579,32 +631,19 @@ export default function ProductDetails() {
                       <p className="text-gray-500 leading-relaxed text-lg font-medium">
                         {productDescription}
                       </p>
-                      <ul className="space-y-4">
-                        {[
-                          "Exquisite attention to minute details",
-                          "Durable, long-lasting premium components",
-                          "Sustainably sourced and ethically manufactured",
-                          "Ergonomic fit for ultimate everyday luxury",
-                        ].map((li, i) => (
-                          <li key={i} className="flex items-start gap-3">
-                            <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mt-1">
-                              <Check className="w-3 h-3 text-emerald-600" />
-                            </div>
-                            <span className="text-sm font-bold text-gray-700">{li}</span>
-                          </li>
-                        ))}
-                      </ul>
                     </div>
+                    {productDetailsImage && (
                     <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
-                      <img src={`https://picsum.photos/seed/${product.id}det/600/600`} alt="Detail" className="w-full object-cover" />
+                      <img src={productDetailsImage} alt="Detail" className="w-full object-cover" />
                     </div>
+                    )}
                   </div>
                 )}
 
                 {activeTab === 'specification' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
-                      { label: 'Product Model', value: `AS-${product.id.toString().slice(0, 8).toUpperCase()}` },
+                      { label: 'Product Model', value: modelNumber || 'N/A' },
                       { label: 'Category', value: categoryName },
                       { label: 'Brand', value: brandName ?? 'Unbranded' },
                       { label: 'Stock', value: stockLabel },
@@ -618,12 +657,28 @@ export default function ProductDetails() {
                     ))}
                   </div>
                 )}
+                {activeTab === 'variants' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    {product.variants?.length ? (
+                      product.variants.map((variant) => (
+                        <div key={variant.id} className="p-6 bg-gray-50 rounded-3xl group hover:bg-emerald-50 transition-colors">
+                          <h4 className="font-black text-gray-900 text-sm mb-2">{variant.name}</h4>
+                          <p className="text-gray-500 text-xs mb-2">Price: {formatPrice(Number(variant.price))}</p>
+                          <p className="text-gray-400 text-[10px]">Stock: {variant.stock > 0 ? `${variant.stock} available` : 'Out of stock'}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">No variants available for this product.</p>
+                    )}
+                  </div>
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
 
         {/* Related Products */}
+        {relatedProducts?.length > 0 && (
         <div className="mt-32">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
@@ -636,22 +691,21 @@ export default function ProductDetails() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-8">
-            {getProducts()
-              .filter((p) => String(p.id) !== String(product.id))
-              .slice(0, 4)
-              .map((relatedProduct, idx) => (
+            {relatedProducts.map((product, idx) => (
                 <motion.div
-                  key={relatedProduct.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
+                  layout
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: Math.min(idx * 0.05, 0.4) }}
                 >
-                  <ProductCard product={relatedProduct} />
+                  <ProductCard product={product} />
                 </motion.div>
               ))}
           </div>
         </div>
+        )}
       </div>
     </main>
   );

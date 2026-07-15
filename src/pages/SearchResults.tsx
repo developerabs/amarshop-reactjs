@@ -1,16 +1,47 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { filterProducts } from "../lib/dataService";
 import ProductCard from "../components/ProductCard";
+import api from "../services/api";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
-
+type SearchResult = {
+  categories: { 
+    id: string; 
+    name: string 
+    slug: string
+    image?: string
+  }[];
+  brands: {
+    id: string;
+    name: string;
+    slug: string;
+    image?: string;
+  }[];
+  products: {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    flashPrice: number;
+    category: string;
+    images: string[];
+    image: string;
+    available: number;
+    salePrice: number;
+    discountAmount: number;
+    discountType: string;
+    rating: number;
+    reviews: number;
+  }[];
+};
 export default function SearchResults() {
   const query = useQuery();
   const searchTerm = query.get("q")?.trim() ?? "";
   const category = query.get("category")?.trim() ?? "";
+  const [searchResults, setSearchResults] = useState<SearchResult>({ categories: [], brands: [], products: [] });
 
   const results = useMemo(
     () => filterProducts({ query: searchTerm, category }),
@@ -20,6 +51,23 @@ export default function SearchResults() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [searchTerm, category]);
+  useEffect(() => {
+    const searchResults = async () => {
+      if (searchTerm.trim() === "") {
+        setSearchResults({ categories: [], brands: [], products: [] });
+        return;
+      }
+      try {
+        const response = await api.get(`/home/search-all?search=${encodeURIComponent(searchTerm.trim())}`);
+        if (response.data.success) {
+          setSearchResults(response.data.data || { categories: [], brands: [], products: [] });
+        }
+      } catch (error) {
+        console.error('Failed to fetch search results:', error);
+      }
+    };
+    searchResults();
+  }, [searchTerm]);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-20 pt-20">
@@ -32,9 +80,9 @@ export default function SearchResults() {
           </p>
         </div>
 
-        {results.length > 0 ? (
+        {searchResults.products.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {results.map((product) => (
+            {searchResults.products.map((product) => (
               <div key={product.id}>
                 <ProductCard product={product} />
               </div>
