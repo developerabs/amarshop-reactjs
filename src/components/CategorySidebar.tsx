@@ -62,7 +62,7 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all border ${activeCategory?.name === category.name ? 'bg-white text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-400 border-transparent group-hover:bg-white group-hover:text-emerald-600 group-hover:border-emerald-100'}`}>
-                      <IconComponent />
+                      <img src={category.image} alt="" />
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${activeCategory?.name === category.name ? 'text-emerald-700' : 'text-gray-600 group-hover:text-emerald-700'}`}>
                       {category.name}

@@ -1,46 +1,50 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
-const SLIDES = [
-  {
-    title: "Modern Sophistication",
-    subtitle: "Experience Innovation with AmarShop Elite",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2000&auto=format&fit=crop",
-    cta: "View Tech",
-    color: "from-blue-900/80 to-transparent"
-  },
-  {
-    title: "Luxe Traditional",
-    subtitle: "Handcrafted Heritage Pieces for Every Occasion",
-    image: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=2000&auto=format&fit=crop",
-    cta: "Explore Saree",
-    color: "from-purple-900/80 to-transparent",
-  },
-  {
-    title: "Timeless Elegance",
-    subtitle: "Discover our Exclusive 2026 Collection",
-    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2000&auto=format&fit=crop",
-    cta: "Shop Jewelry",
-    color: "from-emerald-900/80 to-transparent"
-  }
-];
+interface Slide {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  button_text: string;
+  button_link: string;
+}
 
 export default function HeroBanner() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const navigate = useNavigate();
+  const [slides, setSlides] = useState<Slide[]>([]);
 
   useEffect(() => {
+    if (slides.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
+  }, [slides.length]);
+
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const response = await api.get("/home/sliders");
+        setSlides(response.data.data.sliders);
+      } catch (error) {
+        console.error("Failed to fetch slides:", error);
+      }
+    };
+    fetchSlides();
   }, []);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+
+  if (slides.length === 0) {
+    return <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-2xl sm:rounded-3xl" />;
+  }
 
   return (
     <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] overflow-hidden group touch-none rounded-2xl sm:rounded-3xl shadow-luxury">
@@ -57,13 +61,13 @@ export default function HeroBanner() {
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
             transition={{ duration: 1.2 }}
-            src={SLIDES[currentSlide].image}
-            alt={SLIDES[currentSlide].title}
+            src={slides[currentSlide].image}
+            alt={slides[currentSlide].title}
             className="w-full h-full object-cover"
           />
           
           {/* Gradient Overlay */}
-          <div className={cn("absolute inset-0 bg-gradient-to-r", SLIDES[currentSlide].color)} />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
 
           {/* Content Overlay */}
           <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-16 md:px-24">
@@ -74,17 +78,17 @@ export default function HeroBanner() {
               className="max-w-xl space-y-4 sm:space-y-6"
             >
               <h2 className="text-white text-3xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tight drop-shadow-xl font-display">
-                {SLIDES[currentSlide].title}
+                {slides[currentSlide].title}
               </h2>
               <p className="text-white/90 text-sm sm:text-lg md:text-xl font-medium max-w-md drop-shadow-lg">
-                {SLIDES[currentSlide].subtitle}
+                {slides[currentSlide].description}
               </p>
               <div className="pt-4 sm:pt-6 flex gap-4">
                 <button 
-                  onClick={() => navigate('/all-products')}
+                  onClick={() => navigate(slides[currentSlide].button_link)}
                   className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-900 rounded-full font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-xl active:scale-95 flex items-center gap-2 group/btn"
                 >
-                  {SLIDES[currentSlide].cta}
+                  {slides[currentSlide].button_text}
                   <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                 </button>
               </div>
@@ -111,7 +115,7 @@ export default function HeroBanner() {
 
       {/* Pagination Indicators */}
       <div className="absolute bottom-8 left-8 sm:left-16 flex items-center gap-3 z-30">
-        {SLIDES.map((_, idx) => (
+        {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
