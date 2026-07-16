@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  ArrowLeft, CreditCard, Truck, MapPin, Phone, User, Check, 
+  ArrowLeft, CreditCard, Truck, MapPin, User, Check, 
   ShieldCheck, Zap, Wallet, ChevronRight, Lock, AlertCircle, ChevronDown
 } from "lucide-react";
 import { useCommerce } from "../context/CommerceContext";
@@ -34,62 +34,67 @@ interface CheckoutForm {
   saveInfo: boolean;
   guest_id: string;
   discountCode?: string;
-}
-
-interface PricingDetails {
-  subtotal: number;
-  taxRate: number;
-  taxAmount: number;
-  discountPercent: number;
-  discountAmount: number;
-  shippingCost: number;
-  total: number;
+  shippingId?: string;
 }
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, cartTotal, clearCart } = useCommerce();
   const accessToken = localStorage.getItem("access_token");
-  const authChecked = accessToken ? true : false;
   const { addNotification } = useNotifications();
   const [orderConfirmedData, setOrderConfirmedData] = useState<any>(null);
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
-  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [selectedShippingId, setSelectedShippingId] = useState<string>('');
 
-  // Calculate product-specific tax and discount
-  const calculateProductTax = () => {
-    return cartItems.reduce((total, item) => {
-      const itemSubtotal = item.price * item.quantity;
-      const taxRate = item.tax_rate || 0;
-      const tax = itemSubtotal * (taxRate / 100);
-      return total + parseFloat(tax.toFixed(2));
-    }, 0);
-  };
+  // Calculate product-specific tax and discount with type handling
+  const pricing = (() => {
+    let totalDiscount = 0;
+    let totalTaxAmount = 0;
+    let subtotal = 0;
 
-  const calculateProductDiscount = () => {
-    return cartItems.reduce((total, item) => {
+    cartItems.forEach((item) => {
       const itemSubtotal = item.price * item.quantity;
-      const discountAmount = item.discountAmount || 0;
-      const discountType = item.discountType || '';
-      
-      if (discountType === 'percentage') {
-        const discount = itemSubtotal * (discountAmount / 100);
-        return total + parseFloat(discount.toFixed(2));
-      } else if (discountType === 'fixed') {
-        return total + parseFloat((discountAmount * item.quantity).toFixed(2));
+      subtotal += itemSubtotal;
+
+      // Calculate discount based on discount type
+      let itemDiscount = 0;
+      if (item.discountType === 'percentage') {
+        itemDiscount = itemSubtotal * (item.discountAmount / 100);
+      } else if (item.discountType === 'fixed') {
+        itemDiscount = item.discountAmount * item.quantity;
       }
-      return total;
-    }, 0);
-  };
+      totalDiscount += parseFloat(itemDiscount.toFixed(2));
 
-  const taxAmount = calculateProductTax();
-  const discountAmount = calculateProductDiscount();
-  const discountPercent = cartTotal > 0 ? (discountAmount / cartTotal) * 100 : 0;
-  const taxRate = cartItems.length > 0 ? cartItems[0].tax_rate || 0 : 0;
+      // Calculate tax based on tax type
+      let itemTax = 0;
+      if (item.tax_type === 'inclusive') {
+        // Tax is already included in price, extract it
+        const subtotalAfterDiscount = itemSubtotal - itemDiscount;
+        itemTax = subtotalAfterDiscount * (item.tax_rate / 100) / (1 + item.tax_rate / 100);
+      } else {
+        // Tax is exclusive, add on top
+        const subtotalAfterDiscount = itemSubtotal - itemDiscount;
+        itemTax = subtotalAfterDiscount * (item.tax_rate / 100);
+      }
+      totalTaxAmount += parseFloat(itemTax.toFixed(2));
+    });
+
   
-  // Calculate total with tax, discount, and shipping
-  const subtotalAfterDiscount = cartTotal - discountAmount;
-  const totalWithTax = parseFloat((subtotalAfterDiscount + taxAmount + shippingCost).toFixed(2));
+    const selectedShipping = shippingOptions.find(s => s.id == selectedShippingId);
+    
+    const shippingCost = (selectedShippingId && selectedShipping?.charge) ? parseFloat(parseFloat(selectedShipping.charge).toFixed(2)) : 0;
+    
+    const grandTotal = parseFloat((subtotal - totalDiscount + totalTaxAmount + shippingCost).toFixed(2));
+
+    return {
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      totalDiscount: parseFloat(totalDiscount.toFixed(2)),
+      totalTaxAmount: parseFloat(totalTaxAmount.toFixed(2)),
+      shippingCost: parseFloat(shippingCost.toFixed(2)),
+      grandTotal
+    };
+  })(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Dependency array: [cartItems, selectedShippingId, shippingOptions]
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutForm>({
@@ -103,6 +108,7 @@ export default function Checkout() {
     paymentMethod: 'cod',
     saveInfo: false,
     guest_id: guestId,
+    shippingId: selectedShippingId
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -191,6 +197,7 @@ export default function Checkout() {
           quantity: item.quantity,
         })),
         guest_id: formData.guest_id,
+        shipping_id: selectedShippingId || null,
       };
 
       const response = await api.post('/checkout/place-order', payload , {
@@ -545,11 +552,40 @@ export default function Checkout() {
                       <p className="text-[9px] font-bold text-gray-400 uppercase">Qty: {item.quantity}</p>
                       <p className="text-xs font-black text-emerald-600">{formatPrice(item.price * item.quantity)}</p>
                       {item.tax_rate > 0 && (
-                        <p className="text-[8px] font-bold text-orange-600 uppercase">Tax: {item.tax_rate}%</p>
+                        <p className="text-[8px] font-bold text-orange-600 uppercase">Tax: {item.tax_rate}% ({item.tax_type || 'inclusive'})</p>
                       )}
                       {item.discountAmount > 0 && (
-                        <p className="text-[8px] font-bold text-emerald-600 uppercase">Discount: -{formatPrice(item.discountAmount * item.quantity)}</p>
+                        <p className="text-[8px] font-bold text-emerald-600 uppercase">
+                          {item.discountType === 'percentage' 
+                            ? `Discount: -${item.discountAmount}%` 
+                            : `Discount: -${formatPrice(item.discountAmount * item.quantity)}`}
+                        </p>
                       )}
+                      {(() => {
+                        const itemSubtotal = item.price * item.quantity;
+                        const itemDiscount = item.discountType === 'percentage' 
+                          ? itemSubtotal * (item.discountAmount / 100)
+                          : item.discountAmount * item.quantity;
+                        
+                        let itemTax = 0;
+                        let itemTotal = 0;
+                        
+                        if (item.tax_type === 'inclusive') {
+                          // Tax is already included in price
+                          itemTax = (itemSubtotal - itemDiscount) * (item.tax_rate / 100) / (1 + item.tax_rate / 100);
+                          itemTotal = itemSubtotal - itemDiscount;
+                        } else {
+                          // Tax is exclusive (added on top)
+                          itemTax = (itemSubtotal - itemDiscount) * (item.tax_rate / 100);
+                          itemTotal = itemSubtotal - itemDiscount + itemTax;
+                        }
+                        
+                        return (
+                          <p className="text-xs font-black text-gray-900 pt-1 border-t border-gray-200">
+                            Total: {formatPrice(itemTotal)}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -561,22 +597,23 @@ export default function Checkout() {
                   <span className="text-xs font-black text-gray-900">{formatPrice(cartTotal)}</span>
                 </div>
                 
-                {discountPercent > 0 && (
+                {pricing.totalDiscount > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Discount ({discountPercent}%)</span>
-                    <span className="text-xs font-black text-emerald-600">-{formatPrice(discountAmount)}</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Discount</span>
+                    <span className="text-xs font-black text-emerald-600">-{formatPrice(pricing.totalDiscount)}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tax ({(taxRate * 100).toFixed(0)}%)</span>
-                  <span className="text-xs font-black text-gray-900">{formatPrice(taxAmount)}</span>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tax</span>
+                  <span className="text-xs font-black text-gray-900">{formatPrice(pricing.totalTaxAmount)}</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shipping</span>
                   {shippingOptions.length > 0 ? (
-                    <select name="shipping" id="shipping" className="text-xs font-black text-gray-900">
+                    <select name="shipping" id="shipping" className="text-xs font-black text-gray-900" value={selectedShippingId} onChange={(e) => setSelectedShippingId(e.target.value)}>
+                      <option value="">Select shipping option</option>
                       {shippingOptions.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.name} - {formatPrice(option.charge)}
@@ -590,7 +627,7 @@ export default function Checkout() {
 
                 <div className="flex justify-between items-center pt-4 mt-2 border-t border-gray-900">
                   <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Total Amount</span>
-                  <span className="text-2xl font-black text-gray-900">{formatPrice(cartTotal)}</span>
+                  <span className="text-2xl font-black text-gray-900">{formatPrice(pricing.grandTotal)}</span>
                 </div>
               </div>
 
