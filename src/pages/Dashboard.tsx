@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  User, Package, Heart, MapPin, CreditCard, Settings, ShoppingBag, Truck,
-  CheckCircle, Clock, XCircle, ChevronRight, LogOut, ShieldCheck, Bell, ExternalLink, Trash2
+  User, Package, Heart, MapPin, CreditCard, Settings, ShoppingBag,
+  ChevronRight, LogOut, ShieldCheck, Bell, ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useCommerce } from "../context/CommerceContext";
@@ -31,7 +31,7 @@ interface Order {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "wishlist" | "addresses" | "payments" | "settings">("overview");
-  const { wishlist, cartItems, recentViews } = useCommerce();
+  const { wishlist } = useCommerce();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
@@ -39,6 +39,14 @@ export default function Dashboard() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get("t");
+    if (tabFromUrl && ["overview", "orders", "wishlist", "addresses", "payments", "settings"].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl as "overview" | "orders" | "wishlist" | "addresses" | "payments" | "settings");
+    }
+  }, [window.location.search]);
 
   const wishlistProducts = getProducts().filter(p => wishlist.includes(p.id));
 
@@ -98,7 +106,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tight font-display mb-2">Command Center</h1>
-            <p className="text-gray-500 font-medium">Welcome back, <span className="text-gray-900 font-black">John Doe</span>. Here's what's happening with your account.</p>
+            <p className="text-gray-500 font-medium">Welcome back, <span className="text-gray-900 font-black">{dashboardData?.user?.name}</span>. Here's what's happening with your account.</p>
           </div>
           <div className="flex gap-3">
             <button className="p-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-emerald-600 transition-colors relative">

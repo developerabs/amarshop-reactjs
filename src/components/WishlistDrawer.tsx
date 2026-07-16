@@ -1,7 +1,6 @@
-import { X, Heart, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
+import { X, Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useCommerce } from "../context/CommerceContext";
-import { getProductById } from "../lib/dataService";
 
 interface WishlistDrawerProps {
   isOpen: boolean;
@@ -11,7 +10,7 @@ interface WishlistDrawerProps {
 export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
   const commerce = useCommerce();
   const wishlistItems = commerce.wishlist
-    .map((id) => getProductById(id))
+    .map((id) => commerce.getProductById(id))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   return (

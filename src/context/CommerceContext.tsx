@@ -192,6 +192,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
         ? current.filter((id) => id !== productId)
         : [...current, productId];
       
+      
       addNotification({
         type: "info",
         title: isIncluded ? "Removed from Wishlist" : "Added to Wishlist",

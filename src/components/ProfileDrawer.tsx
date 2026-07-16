@@ -14,6 +14,25 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const navigate = useNavigate();
   const accessToken = localStorage.getItem("access_token");
   const authChecked = accessToken ? true : false;
+  const [profileData, setProfileData] = useState<any>(null);
+
+  const handleMenuClick = (label: string) => {
+    const routes: { [key: string]: string } = {
+      "My Orders": "/dashboard?t=orders",
+      "My Wishlist": "/dashboard?t=wishlist",
+      "Notifications": "/dashboard?t=notifications",
+      "Payment Methods": "/dashboard?t=payments",
+      "Shipping Address": "/dashboard?t=addresses",
+      "Privacy & Security": "/dashboard?t=privacy",
+      "Account Settings": "/dashboard?t=settings",
+    };
+    
+    if (routes[label]) {
+      navigate(routes[label]);
+      onClose();
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout", {}, {
@@ -31,24 +50,28 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       });
     }
   }
-  const [userInfo, setUserInfo] = useState<any>(null);
+
   const user = {
-    name: userInfo?.name,
-    email: userInfo?.email,
-    avatar: userInfo?.avatar,
-    phone: userInfo?.phone,
-    memberSince: userInfo?.memberSince
+    name: profileData?.user?.name,
+    email: profileData?.user?.email,
+    avatar: profileData?.user?.image || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
+    created_at: profileData?.user?.created_at,
   };
 
+  const totalOrders = profileData?.total_orders || 0;
+  const totalSpent = profileData?.total_spent_amount || 0;
+  const totalWishlist = profileData?.total_wishlist_items || 0;
+
   const menuItems = [
-    { icon: Package, label: "My Orders", count: 5, color: "text-blue-600", bg: "bg-blue-50" },
-    { icon: Heart, label: "My Wishlist", count: 12, color: "text-pink-600", bg: "bg-pink-50" },
+    { icon: Package, label: "My Orders", count: totalOrders, color: "text-blue-600", bg: "bg-blue-50" },
+    { icon: Heart, label: "My Wishlist", count: totalWishlist, color: "text-pink-600", bg: "bg-pink-50" },
     { icon: Bell, label: "Notifications", count: 3, color: "text-orange-600", bg: "bg-orange-50" },
     { icon: CreditCard, label: "Payment Methods", color: "text-emerald-600", bg: "bg-emerald-50" },
     { icon: MapPin, label: "Shipping Address", color: "text-purple-600", bg: "bg-purple-50" },
     { icon: Shield, label: "Privacy & Security", color: "text-gray-600", bg: "bg-gray-100" },
     { icon: Settings, label: "Account Settings", color: "text-gray-600", bg: "bg-gray-100" },
   ];
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -58,8 +81,8 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
           }
         });
         if (response.data.success) {
-          console.log("User Info:", response.data.data.user);
-          setUserInfo(response.data.data.user);
+          console.log("User Profile:", response.data.data);
+          setProfileData(response.data.data);
         }
       } catch (error) {
         console.log(error);
@@ -136,21 +159,21 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   </button>
                 </div>
                 <h3 className="text-base font-black text-gray-900 tracking-tight uppercase">{user.name}</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{user.email}</p>
+                <p className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{user.email}</p>
                 <div className="mt-4 flex items-center gap-4">
                   <div className="text-center">
-                    <p className="text-xs font-black text-gray-900">12</p>
+                    <p className="text-xs font-black text-gray-900">{totalOrders}</p>
                     <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Orders</p>
                   </div>
                   <div className="w-[1px] h-4 bg-gray-200" />
                   <div className="text-center">
-                    <p className="text-xs font-black text-gray-900">৳4.5k</p>
+                    <p className="text-xs font-black text-gray-900">{totalSpent}</p>
                     <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Spent</p>
                   </div>
                   <div className="w-[1px] h-4 bg-gray-200" />
                   <div className="text-center">
-                    <p className="text-xs font-black text-gray-900">250</p>
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Points</p>
+                    <p className="text-xs font-black text-gray-900">{totalWishlist}</p>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Wishlist</p>
                   </div>
                 </div>
               </div>
@@ -163,6 +186,7 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   key={idx}
                   aria-label={item.label}
                   className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-all group"
+                  onClick={() => handleMenuClick(item.label)}
                 >
                   <div className="flex items-center gap-3">
                     <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110", item.bg, item.color)}>
@@ -187,7 +211,7 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 Logout Account
               </button>
               <p className="mt-3 text-[8px] font-bold text-gray-400 text-center uppercase tracking-widest">
-                Member Since {user.memberSince}
+                Member Since {user.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
               </p>
             </div>
           </motion.div>

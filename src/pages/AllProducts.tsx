@@ -424,20 +424,8 @@ export default function AllProducts() {
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="bg-white rounded-[2.5rem] p-20 shadow-luxury border border-gray-50 text-center space-y-6">
-                <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
-                  <SlidersHorizontal className="w-10 h-10 text-gray-200" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">No artifacts found.</h3>
-                  <p className="text-gray-500 font-medium max-w-xs mx-auto">Try refining your filters or search criteria to discover more products.</p>
-                </div>
-                <button 
-                  onClick={clearFilters}
-                  className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
-                >
-                  Clear All Filters
-                </button>
+             <div className="flex flex-col items-center justify-center py-32 space-y-4">
+               
               </div>
             )}
           </div>

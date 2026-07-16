@@ -88,7 +88,7 @@ function AppShell() {
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/products" element={<AllProducts />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login setIsProfileOpen={setIsProfileOpen} />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
