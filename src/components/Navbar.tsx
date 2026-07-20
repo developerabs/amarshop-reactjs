@@ -20,6 +20,8 @@ const MOBILE_NAV_LINKS = [
 type Settings = {
   site_name?: string;
   site_logo?: string;
+  site_phone?: string;
+  free_shipping_amount?: number;
 };
 type SearchResult = {
   categories: { 
@@ -102,14 +104,18 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
       <div className="hidden md:block bg-gray-900 text-white py-1.5 px-4 sm:px-6 lg:px-8 border-b border-white/5">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between text-[9px] sm:text-[10px] font-bold tracking-[0.1em] uppercase">
           <div className="flex items-center gap-3 sm:gap-6">
-            <span className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors cursor-pointer">
-              <Phone className="w-2.5 h-2.5 text-emerald-400" />
-              +880 1234 567890
-            </span>
-            <span className="hidden md:flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors cursor-pointer">
-              <Globe className="w-2.5 h-2.5 text-emerald-400" />
-              Free Shipping over ৳1000
-            </span>
+            {settings?.site_phone && (
+              <span className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors cursor-pointer">
+                <Phone className="w-2.5 h-2.5 text-emerald-400" />
+                {settings?.site_phone}
+              </span>
+            )}
+            {settings?.free_shipping_amount && settings?.free_shipping_amount > 0 && (
+              <span className="hidden md:flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors cursor-pointer">
+                <Globe className="w-2.5 h-2.5 text-emerald-400" />
+                Free Shipping over {settings?.free_shipping_amount}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 sm:gap-5">
             <div className="hidden sm:flex items-center gap-4 text-gray-400">
@@ -133,7 +139,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
             {/* Logo */}
             <Link to="/" className="flex-shrink-0 flex items-center">
               <span className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tighter">
-                <img src={settings?.site_logo ?? ''} alt={settings?.site_name ?? ''} className="h-8 sm:h-12 w-1/2" />
+                <img src={settings?.site_logo ?? ''} alt={settings?.site_name ?? ''} className="h-8 sm:h-12 w-1/2"/>
               </span>
             </Link>
 

@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { Mail, ChevronDown, Menu } from "lucide-react";
-import { cn } from "../lib/utils";
+import { Mail, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
 
@@ -14,12 +12,21 @@ const NAV_LINKS = [
   { name: "Contact Us", href: "/contact" },
 ];
 
-type Settings = {
-  site_email?: string;
-};
+interface Settings {
+  site_name: string;
+  site_title: string;
+  site_description: string;
+  site_email: string;
+  site_phone: string;
+  site_address: string;
+  free_shipping_text: string;
+  copyright_text: string;
+  site_logo: string;
+  site_favicon: string;
+}
 
 export default function SubNavbar({ onCategoriesClick }: { onCategoriesClick?: () => void }) {
-  const { settings } = useSettings() as { settings?: Settings };
+  const { settings = {} as Settings } = useSettings() as { settings?: Settings };
 
   return (
     <div className="hidden md:block bg-white border-b border-gray-100 sticky top-[80px] z-40 shadow-sm">
@@ -51,10 +58,12 @@ export default function SubNavbar({ onCategoriesClick }: { onCategoriesClick?: (
           </div>
 
           {/* Right: Email Info */}
-          <div className="hidden lg:flex items-center gap-2 text-[11px] font-bold text-gray-600">
-            <Mail className="w-4 h-4 text-gray-400" />
-            <span>{settings?.site_email}</span>
-          </div>
+          {settings?.site_email && (
+            <div className="hidden lg:flex items-center gap-2 text-[11px] font-bold text-gray-600">
+              <Mail className="w-4 h-4 text-gray-400" />
+              <span>{settings?.site_email}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

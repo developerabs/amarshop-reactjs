@@ -1,6 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useSettings } from "../context/SettingsContext";
+
+interface Settings {
+  site_email?: string;
+  site_phone?: string;
+  site_address?: string;
+}
 
 export default function Contact() {
+  const { settings } = useSettings() as { settings?: Settings };
   const [formState, setFormState] = useState({ name: "", email: "", subject: "", message: "" });
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -89,18 +97,24 @@ export default function Contact() {
                 </div>
 
                 <div className="space-y-4">
+                  {settings?.site_email && (
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-200">Customer Support</p>
-                    <p className="mt-2 font-black text-lg">support@amarshop.com</p>
+                    <p className="mt-2 font-black text-lg">{settings?.site_email}</p>
                   </div>
+                  )}
+                  {settings?.site_phone && (
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-200">Phone</p>
-                    <p className="mt-2 font-black text-lg">+880 1234 567 890</p>
+                    <p className="mt-2 font-black text-lg">{settings?.site_phone}</p>
                   </div>
+                  )}
+                  {settings?.site_address && (
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-200">Address</p>
-                    <p className="mt-2 font-black text-lg">Dhaka, Bangladesh</p>
+                    <p className="mt-2 font-black text-lg">{settings?.site_address}</p>
                   </div>
+                  )}
                 </div>
               </div>
             </div>

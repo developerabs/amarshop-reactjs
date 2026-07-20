@@ -3,9 +3,15 @@ import api from "../services/api";
 
 interface Settings {
   site_name: string;
-  logo: string;
-  email: string;
-  phone: string;
+  site_title: string;
+  site_description: string;
+  site_email: string;
+  site_phone: string;
+  site_address: string;
+  free_shipping_amount: number;
+  copyright_text: string;
+  site_logo: string;
+  site_favicon: string;
 }
 
 interface SettingsContextType {
@@ -27,8 +33,8 @@ export const SettingsProvider = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/site-settings").then((res) => {
-      setSettings(res.data);
+    api.get("/settings/general-settings").then((res) => {
+      setSettings(res.data.data);
       setLoading(false);
     });
   }, []);

@@ -1,17 +1,9 @@
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, ShieldCheck, Truck, RotateCcw, Headphones } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
 
-type Settings = {
-  site_name?: string;
-  site_description?: string;
-  site_logo?: string;
-  site_address?: string;
-  site_phone?: string;
-  site_email?: string;
-};
 
 export default function Footer() {
-  const { settings } = useSettings() as { settings?: Settings };
+  const { settings, loading } = useSettings();
 
   const features = [
     { icon: Truck, title: "Fast Delivery", desc: "Across Bangladesh" },
@@ -41,12 +33,16 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
           <div className="space-y-6">
-            <span className="text-3xl font-black text-gray-900 tracking-tighter">
+            {settings?.site_logo && (
+              <span className="text-3xl font-black text-gray-900 tracking-tighter">
                 <img src={settings?.site_logo ?? ''} alt={settings?.site_name ?? ''} className="h-8 sm:h-12 w-1/2" />
-            </span>
-            <p className="text-sm text-gray-500 leading-relaxed font-medium">
-              {settings?.site_description}
-            </p>
+              </span>
+            )}
+            {settings?.site_description && (
+              <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                {settings?.site_description}
+              </p>
+            )}
             <div className="flex gap-3">
               {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
                 <button
@@ -76,18 +72,24 @@ export default function Footer() {
           <div>
             <h4 className="text-gray-900 font-black text-sm uppercase tracking-widest mb-8">Support</h4>
             <ul className="space-y-4 text-sm font-bold">
-              <li className="flex items-start gap-3 text-gray-500">
-                <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <span>{settings?.site_address}</span>
-              </li>
-              <li className="flex items-center gap-3 text-gray-500">
-                <Phone className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <span>{settings?.site_phone}</span>
-              </li>
-              <li className="flex items-center gap-3 text-gray-500">
-                <Mail className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <span>{settings?.site_email}</span>
-              </li>
+              {settings?.site_address && (
+                <li className="flex items-start gap-3 text-gray-500">
+                  <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <span>{settings?.site_address}</span>
+                </li>
+              )}
+              {settings?.site_phone && (
+                <li className="flex items-center gap-3 text-gray-500">
+                  <Phone className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <span>{settings?.site_phone}</span>
+                </li>
+              )}
+              {settings?.site_email && (
+                <li className="flex items-center gap-3 text-gray-500">
+                  <Mail className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <span>{settings?.site_email}</span>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -105,7 +107,7 @@ export default function Footer() {
         </div>
 
         <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-          <p>© 2026 AmarShop Bangladesh. All rights reserved.</p>
+          <p>{settings?.copyright_text}</p>
           <div className="flex gap-6">
             <button className="hover:text-emerald-600 transition-colors">Privacy</button>
             <button className="hover:text-emerald-600 transition-colors">Terms</button>
