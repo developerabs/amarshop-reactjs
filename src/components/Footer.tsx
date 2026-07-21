@@ -34,9 +34,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-6">
             {settings?.site_logo && (
-              <span className="text-3xl font-black text-gray-900 tracking-tighter">
-                <img src={settings?.site_logo ?? ''} alt={settings?.site_name ?? ''} className="h-8 sm:h-12 w-1/2" />
-              </span>
+              <img src={settings?.site_logo ?? ''} alt={settings?.site_name ?? ''} className="h-8 sm:h-12 site-logo-header" />
             )}
             {settings?.site_description && (
               <p className="text-sm text-gray-500 leading-relaxed font-medium">

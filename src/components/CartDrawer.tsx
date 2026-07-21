@@ -1,24 +1,32 @@
 import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { cn } from "../lib/utils";
+import { useCommerce } from "../context/CommerceContext";
 
 interface CartItem {
-  id: string;
+  id: number;
   name: string;
   price: number;
   image: string;
   quantity: number;
   category: string;
   variation: string;
-  variationId?: string;
+  variationId?: number;
 }
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onUpdateQuantity: (id: string, delta: number) => void;
-  onRemove: (id: string) => void;
+  onRemove: (
+      productId: number,
+      variationId?: number
+  ) => void;
+
+  onUpdateQuantity: (
+      productId: number,
+      variationId?: number,
+      delta?: number,
+  ) => void;
   onCheckout: () => void;
 }
 
@@ -26,9 +34,9 @@ export default function CartDrawer({
   isOpen, 
   onClose, 
   items, 
-  onUpdateQuantity, 
-  onRemove, 
-  onCheckout 
+  onCheckout,
+  onRemove,
+  onUpdateQuantity
 }: CartDrawerProps) {
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
@@ -80,7 +88,7 @@ export default function CartDrawer({
             <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
               {items.length > 0 ? (
                 items.map((item) => (
-                  <div key={item.id} className="flex gap-3 group">
+                  <div key={`${Number(item.id)}-${Number(item.variationId)}`} className="flex gap-3 group">
                     <div className="relative w-16 h-16 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
                       <img
                         src={item.image}
@@ -97,7 +105,7 @@ export default function CartDrawer({
                           </h3>
                           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{item.variation}</p>
                           <button 
-                            onClick={() => onRemove(item.id)}
+                            onClick={() => onRemove(Number(item.id), Number(item.variationId))}
                             aria-label={`Remove ${item.name} from cart`}
                             className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-all"
                           >
@@ -110,7 +118,11 @@ export default function CartDrawer({
                       <div className="flex items-center justify-between mt-1">
                         <div className="flex items-center gap-0.5 bg-gray-50 rounded-md p-0.5 border border-gray-100">
                           <button 
-                            onClick={() => onUpdateQuantity(item.id, -1)}
+                            onClick={() => onUpdateQuantity(
+                                Number(item.id),
+                                Number(item.variationId),
+                                Number(-1),
+                            )}
                             aria-label={`Decrease quantity of ${item.name}`}
                             className="w-6 h-6 flex items-center justify-center rounded-sm hover:bg-white hover:text-emerald-600 transition-all text-gray-400"
                           >
@@ -118,7 +130,11 @@ export default function CartDrawer({
                           </button>
                           <span className="w-6 text-center text-[10px] font-black text-gray-900">{item.quantity}</span>
                           <button 
-                            onClick={() => onUpdateQuantity(item.id, 1)}
+                            onClick={() => onUpdateQuantity(
+                                Number(item.id),
+                                Number(item.variationId),
+                                Number(1),
+                            )}
                             aria-label={`Increase quantity of ${item.name}`}
                             className="w-6 h-6 flex items-center justify-center rounded-sm hover:bg-white hover:text-emerald-600 transition-all text-gray-400"
                           >

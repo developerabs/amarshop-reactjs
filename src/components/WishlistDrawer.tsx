@@ -9,9 +9,7 @@ interface WishlistDrawerProps {
 
 export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
   const commerce = useCommerce();
-  const wishlistItems = commerce.wishlist
-    .map((id) => commerce.getProductById(id))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const wishlistItems = commerce.wishlist;
 
   return (
     <AnimatePresence>
@@ -65,7 +63,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                     {/* Product Image */}
                     <div className="relative w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
                       <img
-                        src={item.image}
+                        src={item.thumbnail}
                         alt={item.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         referrerPolicy="no-referrer"
@@ -78,21 +76,21 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                         <h3 className="text-[11px] font-bold text-gray-900 line-clamp-1 leading-tight group-hover:text-pink-600 transition-colors">
                           {item.name}
                         </h3>
-                        <p className="text-[9px] font-medium text-gray-400 uppercase tracking-wider">{item.category}</p>
+                        <p className="text-[9px] font-medium text-gray-400 uppercase tracking-wider">{item.category_name}</p>
                       </div>
                       
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs font-black text-gray-900">৳{item.price}</span>
+                        <span className="text-xs font-black text-gray-900">৳{item.sale_price}</span>
                         <div className="flex items-center gap-1">
                               <button 
-                            onClick={() => commerce.addToCart(item.id)}
+                            onClick={() => commerce.addToCart(Number(item.id))}
                             aria-label={`Add ${item.name} to cart`}
                             className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
                           >
                             <ShoppingCart className="w-3 h-3" />
                           </button>
                           <button 
-                            onClick={() => commerce.toggleWishlist(item.id)}
+                            onClick={(e) => { e.stopPropagation(); commerce.toggleWishlist(Number(item.id)); }}
                             aria-label={`Remove ${item.name} from wishlist`}
                             className="p-1.5 rounded-lg bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all active:scale-95"
                           >
@@ -124,7 +122,13 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
 
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-              <button className="w-full py-3 rounded-xl bg-emerald-600 text-white font-black text-[10px] shadow-lg shadow-emerald-500/10 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2 group">
+              <button 
+                onClick={() => {
+                  wishlistItems.forEach((item) => commerce.addToCart(Number(item.id)));
+                }}
+                className="w-full py-3 rounded-xl bg-emerald-600 text-white font-black text-[10px] shadow-lg shadow-emerald-500/10 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2 group hover:bg-emerald-700 disabled:opacity-50"
+                disabled={wishlistItems.length === 0}
+              >
                 Add to cart all Products
                 <ShoppingCart className="w-3 h-3 transition-transform group-hover:scale-110" />
               </button>

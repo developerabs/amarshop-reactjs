@@ -41,8 +41,10 @@ type SearchResult = {
     name: string;
     slug: string;
     price: number;
+    sale_price: number;
     flashPrice: number;
     category: string;
+    thumbnail: string;
     images: string[];
     image: string;
     available: number;
@@ -66,6 +68,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult>({ categories: [], brands: [], products: [] });
+  const [recentSearches, setRecentSearches] = useState<SearchResult['products']>([]);
   const navigate = useNavigate();
 
   const categories = ["All Categories", "Fashion", "Electronics", "Home", "Beauty", "Groceries"];
@@ -89,6 +92,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
       try {
         const response = await api.get(`/home/search-all?search=${encodeURIComponent(searchQuery.trim())}`);
         if (response.data.success) {
+          console.log('Search Results:', response.data.data);
           setSearchResults(response.data.data || { categories: [], brands: [], products: [] });
         }
       } catch (error) {
@@ -97,6 +101,39 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
     };
     searchResults();
   }, [searchQuery]);
+  useEffect(() => {
+    const loadRecentSearches = () => {
+      const storedSearches = localStorage.getItem("recentSearches");
+      if (storedSearches) {
+        setRecentSearches(JSON.parse(storedSearches));
+      }
+    };
+    loadRecentSearches();
+  }, []);
+
+  const addToRecentSearches = (product: any) => {
+    const storedSearches = localStorage.getItem("recentSearches");
+    let recentList = storedSearches ? JSON.parse(storedSearches) : [];
+    
+    // Create product object with necessary info
+    const productData = {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      image: product.image || product.thumbnail,
+      sale_price: product.sale_price,
+    };
+    
+    // Remove if already exists and add to front
+    recentList = recentList.filter((p: any) => p.id !== product.id);
+    recentList.unshift(productData);
+    
+    // Keep only last 10 searches
+    recentList = recentList.slice(0, 10);
+    
+    localStorage.setItem("recentSearches", JSON.stringify(recentList));
+    setRecentSearches(recentList);
+  };
 
   return (
     <>
@@ -138,9 +175,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
           <div className="flex items-center justify-between h-12 sm:h-20 gap-4 sm:gap-8">
             {/* Logo */}
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tighter">
-                <img src={settings?.site_logo ?? ''} alt={settings?.site_name ?? ''} className="h-8 sm:h-12 w-1/2"/>
-              </span>
+              <img src={settings?.site_logo ?? ''} alt={settings?.site_name ?? ''} className="h-8 sm:h-12 site-logo-header"/>
             </Link>
 
             {/* Search Bar - Desktop */}
@@ -224,32 +259,59 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                     className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 p-5 z-50"
                   >
                     <div className="space-y-4">
+                      {searchResults.categories.length > 0 && (
                       <div>
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Popular Searches</p>
                         <div className="flex flex-wrap gap-2">
                           {searchResults.products.map(product => (
                             <button
-                              key={product.id}
-                              onClick={() => {
-                                setSearchQuery(product.name);
-                                setIsSearchFocused(false);
-                                navigate(`/search?q=${encodeURIComponent(product.name)}`);
-                              }}
-                              className="px-3 py-1.5 rounded-lg bg-gray-50 text-[11px] font-bold text-gray-600 hover:bg-blue-50 hover:text-[#0056b3] transition-all"
-                            >
-                              {product.name}
-                            </button>
+                                key={product.id}
+                                onClick={() => {
+                                  setIsSearchFocused(false);
+                                  addToRecentSearches(product);
+                                  navigate(`/product/${product.slug}`);
+                                }}
+                                className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#0056b3] transition-all w-auto content-center"
+                                title={product.name}
+                              >
+                                <img 
+                                  src={product.image || product.thumbnail || ''} 
+                                  alt={product.name}
+                                  className="w-full h-12 object-cover rounded"
+                                />
+                                <span className="text-[10px] font-semibold truncate w-16">{product.name}</span>
+                                <span className="text-[9px] text-[#0056b3] font-bold">{formatPrice(product.sale_price)}</span>
+                              </button>
                           ))}
                         </div>
                       </div>
-                      <div className="pt-4 border-t border-gray-50">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Recent Views</p>
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 animate-pulse" />
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 animate-pulse" />
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 animate-pulse" />
+                      )}
+                      {recentSearches.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Recent Views</p>
+                          <div className="flex flex-wrap gap-2">
+                            {recentSearches.slice(0, 4).map(product => (
+                              <button
+                                key={product.id}
+                                onClick={() => {
+                                  setIsSearchFocused(false);
+                                  navigate(`/product/${product.slug}`);
+                                }}
+                                className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#0056b3] transition-all w-auto"
+                                title={product.name}
+                              >
+                                <img 
+                                  src={product.image || product.thumbnail || ''} 
+                                  alt={product.name}
+                                  className="w-full h-12 object-cover rounded"
+                                />
+                                <span className="text-[10px] font-semibold truncate w-16">{product.name}</span>
+                                <span className="text-[9px] text-[#0056b3] font-bold">{formatPrice(product.sale_price)}</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -309,7 +371,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                 <Truck className="w-5 h-5" />
               </button>
               <a 
-                href="tel:+8801234567890"
+                href={`tel:${settings?.site_phone ?? ''}`}
                 aria-label="Call Us"
                 className="p-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
               >

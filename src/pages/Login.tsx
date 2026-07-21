@@ -5,6 +5,7 @@ import api from "../services/api";
 
 interface LoginProps {
   setIsProfileOpen: (value: boolean) => void;
+  setIsAuthenticated: (value: boolean) => void;
 }
 
 export default function Login({ setIsProfileOpen }: LoginProps) {
@@ -18,6 +19,8 @@ export default function Login({ setIsProfileOpen }: LoginProps) {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const [profileData, setProfileData] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const from = location.state?.from?.pathname || "/";
 
@@ -39,10 +42,22 @@ export default function Login({ setIsProfileOpen }: LoginProps) {
         localStorage.setItem("access_token", response.data.data.access_token);
         if (setIsProfileOpen) {
           setIsProfileOpen(true);
+          setIsAuthenticated(true);
         }
-        setTimeout(() => {
-          window.location.href = from === "/" ? "/" : from;
-        });
+          try {
+            const profileResponse: any = await api.get("/profile", {
+              headers: {
+                Authorization: `Bearer ${response.data.data.access_token}`
+              }
+            });
+            if (profileResponse.data.success) {
+              console.log("User Profile:", profileResponse.data.data);
+              setProfileData(profileResponse.data.data);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+          navigate("/dashboard", { replace: true });
       }
     }
     catch(error){

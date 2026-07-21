@@ -78,7 +78,7 @@ function AppShell() {
 
       <Suspense fallback={<div className="min-h-[70vh] flex items-center justify-center text-gray-600">Loading page…</div>}>
         <Routes>
-          <Route path="/" element={<Home onCategorySeeMore={() => setIsCategoryOverlayOpen(true)} onAddToCart={addToCart} />} />
+          <Route path="/" element={<Home onCategorySeeMore={() => setIsCategoryOverlayOpen(true)} onAddToCart={(productId) => addToCart(Number(productId))} />} />
           <Route path="/allproducts" element={<AllProducts />} />
           <Route path="/product/:productName" element={<ProductDetails />} />
           <Route path="/search" element={<SearchResults />} />
@@ -111,8 +111,8 @@ function AppShell() {
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={updateCartQuantity}
+        items={cartItems.map(item => ({ ...item, id: Number(item.id), variationId: item.variationId ? Number(item.variationId) : undefined }))}
+        onUpdateQuantity={(productId, variationId, delta) => updateCartQuantity(productId, variationId ?? 0,  delta)}
         onRemove={removeFromCart}
         onCheckout={handleCheckout}
       />

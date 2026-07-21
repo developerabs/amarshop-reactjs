@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById, getProductBySlug, getProducts } from "../lib/dataService";
 import ProductCard from "../components/ProductCard";
+import { useSettings } from "../context/SettingsContext";
 import {
   Star,
   ShoppingCart,
@@ -119,6 +120,7 @@ export default function ProductDetails() {
   const productSlug = params.productSlug || params.productName || params.id;
   const navigate = useNavigate();
   const { addRecentView, addToCart, toggleWishlist, isInWishlist } = useCommerce();
+  const { settings } = useSettings();
 
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -277,7 +279,7 @@ export default function ProductDetails() {
 
   useEffect(() => {
     if (!product) return;
-    addRecentView(product.id.toString());
+    addRecentView(product.id);
     window.scrollTo(0, 0);
   }, [product?.id, addRecentView]);
 
@@ -332,7 +334,7 @@ export default function ProductDetails() {
   const productDescription = product?.description;
   const productDetailsImage = product?.details_image ?? undefined;
 
-  const isWishlisted = product ? isInWishlist(String(product.id)) : false;
+  const isWishlisted = product ? isInWishlist(Number(product.id)) : false;
 
   const handleShare = async () => {
     if (!product) return;
@@ -358,7 +360,7 @@ export default function ProductDetails() {
     const message = encodeURIComponent(
       `Hi AmarShop, I'm interested in the ${product.name} (Ref: ${product.id}). Can I get more details?`
     );
-    window.open(`https://wa.me/8801234567890?text=${message}`, "_blank");
+    window.open(`https://wa.me/${settings?.site_phone ?? ''}?text=${message}`, "_blank");
   };
 
   if (loading) {
@@ -435,7 +437,7 @@ export default function ProductDetails() {
                   <Share2 className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => toggleWishlist(String(product.id))}
+                  onClick={() => toggleWishlist(Number(product.id))}
                   className={`p-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl transition-all ${isWishlisted ? "text-red-500" : "text-gray-900 hover:text-red-500"}`}
                 >
                   <Heart className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} />
@@ -542,7 +544,7 @@ export default function ProductDetails() {
 
                 <button
                   onClick={() => {
-                    addToCart(String(product.id), quantity, selectedVariant?.id ? String(selectedVariant.id) : undefined);
+                    addToCart(Number(product.id), quantity, selectedVariant?.id ? Number(selectedVariant.id) : undefined);
                   }}
                   className="flex-1 flex items-center justify-center gap-3 px-8 py-5 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all active:scale-95 shadow-2xl shadow-emerald-200 group"
                 >
@@ -554,7 +556,7 @@ export default function ProductDetails() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
-                    addToCart(String(product.id), quantity, selectedVariant?.id ? String(selectedVariant.id) : undefined);
+                    addToCart(Number(product.id), quantity, selectedVariant?.id ? Number(selectedVariant.id) : undefined);
                     navigate('/checkout');
                   }}
                   className="flex-1 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2"

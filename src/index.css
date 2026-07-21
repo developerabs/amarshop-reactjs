@@ -123,6 +123,11 @@
   color: #14532d;
 }
 
+.site-logo-header {
+  min-width: 100px;
+  max-width: 160px;
+}
+
 /* Custom Scrollbar for Desktop */
 @media (min-width: 1024px) {
   ::-webkit-scrollbar {
@@ -136,6 +141,24 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-300;
+  }
+}
+@media (max-width: 400px) {
+  .site-logo-header {
+    min-width: 70px;
+    max-width: 140px;
+  }
+}
+@media (max-width: 375px) {
+  .site-logo-header {
+    min-width: 70px;
+    max-width: 140px;
+  }
+}
+@media (max-width: 320px) {
+  .site-logo-header {
+    min-width: 70px;
+    max-width: 140px;
   }
 }
 

@@ -21,8 +21,8 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
   const commerce = useCommerce();
   const { addNotification } = useNotifications();
   
-  const wishlisted = typeof isWishlisted === "boolean" ? isWishlisted : commerce.isInWishlist(product.id);
-  const compared = commerce.isInCompare(product.id);
+  const wishlisted = typeof isWishlisted === "boolean" ? isWishlisted : commerce.isInWishlist(Number(product.id));
+  const compared = commerce.isInCompare(Number(product.id));
   
   const addToCart = onAddToCart ?? commerce.addToCart;
   const toggleWishlist = onToggleWishlist ?? commerce.toggleWishlist;
@@ -114,7 +114,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
         {/* Top Right Actions */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 z-20 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
           <button 
-            onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
+            onClick={(e) => { e.stopPropagation(); commerce.toggleWishlist(Number(product.id)); }}
             className={cn(
               "p-2.5 rounded-full backdrop-blur-md transition-all shadow-xl border border-white/20",
               wishlisted ? "bg-pink-600 text-white" : "bg-white/90 text-gray-900 hover:bg-pink-50 hover:text-pink-600"
@@ -124,7 +124,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
             <Heart className={cn("w-4 h-4", wishlisted && "fill-current")} />
           </button>
           <button 
-            onClick={(e) => { e.stopPropagation(); commerce.toggleCompareItem(product.id); }}
+            onClick={(e) => { e.stopPropagation(); commerce.toggleCompareItem(Number(product.id)); }}
             className={cn(
               "p-2.5 rounded-full backdrop-blur-md transition-all shadow-xl border border-white/20",
               compared ? "bg-emerald-600 text-white" : "bg-white/90 text-gray-900 hover:bg-emerald-50 hover:text-emerald-600"
@@ -169,7 +169,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              addToCart(product.id);
+              commerce.addToCart(Number(product.id));
             }}
             aria-label={`Add ${product.name} to cart`}
             className="col-span-1 flex items-center justify-center py-2.5 rounded-xl bg-gray-50 text-gray-900 hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-95 border border-gray-100"
