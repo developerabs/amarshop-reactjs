@@ -158,10 +158,6 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
             <span className="text-xl font-black text-gray-900">{formatPrice((product as any).sale_price ?? product.price)}</span>
                     <span className="text-xs text-gray-400 line-through font-medium">{formatPrice(product.price)}</span>
           </div>
-          <div className="flex items-center gap-1 bg-yellow-50 px-2 py-0.5 rounded-full">
-            <Star className="w-3 h-3 text-yellow-500 fill-current" />
-            <span className="text-[10px] font-bold text-yellow-700">{product.rating}</span>
-          </div>
         </div>
 
         {/* Action Buttons */}
