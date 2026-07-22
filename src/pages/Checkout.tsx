@@ -12,6 +12,7 @@ import { cn, formatPrice } from "../lib/utils";
 import api from "../services/api";
 import { v4 as uuidv4 } from "uuid";
 import { T } from "@/dist/assets/index-Ch2Iwmre";
+import { useSettings } from "../context/SettingsContext";
 
 let guestId: string = localStorage.getItem("guest_id") || '';
 
@@ -19,6 +20,9 @@ if (!guestId) {
     guestId = uuidv4();
     localStorage.setItem("guest_id", guestId);
 }
+type Settings = {
+  free_shipping_amount?: number;
+};
 
 interface CheckoutForm {
   fullname: string;
@@ -42,13 +46,15 @@ export default function Checkout() {
   const [orderConfirmedData, setOrderConfirmedData] = useState<any>(null);
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
   const [selectedShippingId, setSelectedShippingId] = useState<string>('');
+  const { settings } = useSettings() as { settings?: Settings };
 
   // Calculate product-specific tax and discount with type handling
   const pricing = (() => {
     let totalDiscount = 0;
     let totalTaxAmount = 0;
     let subtotal = 0;
-
+    let freeShippingAmount = settings?.free_shipping_amount || 0;
+    
     cartItems.forEach((item) => {
       const itemSubtotal = item.price * item.quantity;
       subtotal += itemSubtotal;
@@ -82,13 +88,15 @@ export default function Checkout() {
     const shippingCost = (selectedShippingId && selectedShipping?.charge) ? parseFloat(parseFloat(selectedShipping.charge).toFixed(2)) : 0;
     
     const grandTotal = parseFloat((subtotal - totalDiscount + totalTaxAmount + shippingCost).toFixed(2));
+    const isFreeShipping = subtotal >= freeShippingAmount;
 
     return {
       subtotal: parseFloat(subtotal.toFixed(2)),
       totalDiscount: parseFloat(totalDiscount.toFixed(2)),
       totalTaxAmount: parseFloat(totalTaxAmount.toFixed(2)),
       shippingCost: parseFloat(shippingCost.toFixed(2)),
-      grandTotal
+      grandTotal,
+      isFreeShipping
     };
   })(); // eslint-disable-next-line react-hooks/exhaustive-deps
   // Dependency array: [cartItems, selectedShippingId, shippingOptions]
@@ -162,7 +170,7 @@ export default function Checkout() {
           Authorization: `Bearer ${accessToken}`
         }
       });
-      
+      console.log("Order submission response:", response);
       setOrderConfirmedData(response.data.data);
       setIsProcessing(false);
       setIsSuccess(true);
@@ -374,6 +382,7 @@ export default function Checkout() {
                     <div className="flex-1 space-y-1">
                       <p className="text-[10px] font-black text-gray-900 uppercase tracking-tight line-clamp-1">{item.name}</p>
                       <p className="text-[9px] font-bold text-gray-400 uppercase">Qty: {item.quantity}</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{item.variation}</p>
                       <p className="text-xs font-black text-emerald-600">{formatPrice(item.price * item.quantity)}</p>
                       {item.tax_rate > 0 && (
                         <p className="text-[8px] font-bold text-orange-600 uppercase">Tax: {item.tax_rate}% ({item.tax_type || 'inclusive'})</p>
@@ -435,7 +444,7 @@ export default function Checkout() {
                 
                 <div className="flex justify-between">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shipping</span>
-                  {shippingOptions.length > 0 ? (
+                  {pricing.isFreeShipping == false && shippingOptions.length > 0 ? (
                     <select name="shipping" id="shipping" className="text-xs font-black text-gray-900" value={selectedShippingId} onChange={(e) => setSelectedShippingId(e.target.value)}>
                       <option value="">Select shipping option</option>
                       {shippingOptions.map((option) => (
@@ -444,6 +453,8 @@ export default function Checkout() {
                         </option>
                       ))}
                     </select>
+                  ) : pricing.isFreeShipping ? (
+                    <span className="text-xs font-black text-emerald-600 uppercase tracking-widest">Free</span>
                   ) : (
                     <span className="text-xs font-black text-gray-900">Calculating...</span>
                   )}
