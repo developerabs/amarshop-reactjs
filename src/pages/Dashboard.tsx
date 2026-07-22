@@ -12,6 +12,7 @@ import ProductCard from "../components/ProductCard";
 import { getProducts } from "../lib/dataService";
 import api from "../services/api";
 import { v4 as uuidv4 } from "uuid";
+import { setTimeout } from "timers/promises";
 
 let guestId: string = localStorage.getItem("guest_id") || '';
 
@@ -35,6 +36,10 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
+  const accessToken = localStorage.getItem("access_token");
+  const authChecked = accessToken ? true : false;
+  const commerce = useCommerce();
+  const wishlistProducts = commerce.wishlist;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -47,8 +52,6 @@ export default function Dashboard() {
       setActiveTab(tabFromUrl as "overview" | "orders" | "wishlist" | "addresses" | "payments" | "settings");
     }
   }, [window.location.search]);
-
-  const wishlistProducts = getProducts().filter(p => wishlist.includes(p.id));
 
   
   useEffect(() => {
@@ -87,6 +90,20 @@ export default function Dashboard() {
 
     fetchOrders();
   }, []);
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout", {}, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      localStorage.removeItem("access_token");
+      navigate("/");
+    }
+  }
 
   const getStatusStyles = (status: Order["order_status"]) => {
     switch (status) {
@@ -113,7 +130,7 @@ export default function Dashboard() {
               <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
             </button>
-            <button className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
+            <button onClick={handleLogout} className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
               <LogOut className="w-4 h-4" />
               Sign Out
             </button>

@@ -46,8 +46,8 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       localStorage.removeItem("access_token");
       onClose();
       setTimeout(() => {
-          window.location.href = "/";
-      });
+          navigate("/");
+      }, 0);
     }
   }
 

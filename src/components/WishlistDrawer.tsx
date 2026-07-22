@@ -125,6 +125,8 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
               <button 
                 onClick={() => {
                   wishlistItems.forEach((item) => commerce.addToCart(Number(item.id)));
+                  commerce.clearWishlist();
+                  onClose();
                 }}
                 className="w-full py-3 rounded-xl bg-emerald-600 text-white font-black text-[10px] shadow-lg shadow-emerald-500/10 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2 group hover:bg-emerald-700 disabled:opacity-50"
                 disabled={wishlistItems.length === 0}

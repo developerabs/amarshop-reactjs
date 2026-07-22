@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin } from "lucide-react";
 import api from "../services/api";
-
-export default function Register() {
+interface RegisterProps {
+  setIsProfileOpen?: (value: boolean) => void;
+}
+export default function Register({ setIsProfileOpen }: RegisterProps) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -19,6 +21,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+    const [profileData, setProfileData] = useState<any>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,9 +57,23 @@ export default function Register() {
       if (response.data.success) {
         console.log("Registration successful:", response.data);
         localStorage.setItem("access_token", response.data.data.access_token);
-        setTimeout(() => {
-          window.location.href = "/";
-        });
+        if (setIsProfileOpen) {
+          setIsProfileOpen(true);
+        }
+        try {
+          const profileResponse: any = await api.get("/profile", {
+            headers: {
+              Authorization: `Bearer ${response.data.data.access_token}`
+            }
+          });
+          if (profileResponse.data.success) {
+            console.log("User Profile:", profileResponse.data.data);
+            setProfileData(profileResponse.data.data);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+        navigate("/dashboard", { replace: true });
       }
     } catch (err: any) {
       console.error("Registration failed:", err.response?.data?.message || err.message);

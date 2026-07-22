@@ -67,7 +67,8 @@ function AppShell() {
         onCartClick={() => setIsCartOpen(true)}
         onWishlistClick={() => setIsWishlistOpen(true)}
         onProfileClick={() => {
-          if (authChecked) {
+          const isAuthenticated = !!localStorage.getItem("access_token");
+          if (isAuthenticated) {
             setIsProfileOpen(true);
           } else {
             navigate('/login');

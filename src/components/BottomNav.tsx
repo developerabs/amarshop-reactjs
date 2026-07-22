@@ -2,18 +2,30 @@ import { Home, Grid, Heart, ShoppingCart, User } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCommerce } from "../context/CommerceContext";
+import { useState } from "react";
 
 export default function BottomNav({ onCartClick, onWishlistClick, onProfileClick }: { onCartClick?: () => void, onWishlistClick?: () => void, onProfileClick?: () => void }) {
   const { cartCount, wishlistCount } = useCommerce();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const handleProfileClick = () => {
+    const isAuthenticated = !!localStorage.getItem("access_token");
+    if (isAuthenticated) {
+      setIsProfileOpen(true);
+      onProfileClick?.();
+    } else {
+      navigate('/login');
+    }
+  };
 
   const navItems = [
     { icon: Home, label: "Home", active: location.pathname === "/", onClick: () => navigate("/") },
     { icon: Grid, label: "All Products", active: location.pathname === "/allproducts", onClick: () => navigate("/allproducts") },
     { icon: ShoppingCart, label: "Cart", badge: cartCount > 0 ? cartCount : undefined, onClick: onCartClick },
     { icon: Heart, label: "Wishlist", badge: wishlistCount > 0 ? wishlistCount : undefined, onClick: onWishlistClick },
-    { icon: User, label: "Profile", onClick: onProfileClick },
+    { icon: User, label: "Profile", onClick: handleProfileClick },
   ];
 
   return (

@@ -11,6 +11,7 @@ import SEO from "../components/SEO";
 import { cn, formatPrice } from "../lib/utils";
 import api from "../services/api";
 import { v4 as uuidv4 } from "uuid";
+import { T } from "@/dist/assets/index-Ch2Iwmre";
 
 let guestId: string = localStorage.getItem("guest_id") || '';
 
@@ -20,13 +21,9 @@ if (!guestId) {
 }
 
 interface CheckoutForm {
-  firstName: string;
-  lastName: string;
-  email: string;
+  fullname: string;
   phone: string;
   address: string;
-  city: string;
-  postalCode: string;
   paymentMethod: 'bkash' | 'nagad' | 'rocket' | 'card' | 'cod';
   cardNumber?: string;
   expiryDate?: string;
@@ -98,13 +95,9 @@ export default function Checkout() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutForm>({
-    firstName: '',
-    lastName: '',
-    email: '',
+    fullname: '',
     phone: '',
     address: '',
-    city: '',
-    postalCode: '',
     paymentMethod: 'cod',
     saveInfo: false,
     guest_id: guestId,
@@ -144,50 +137,14 @@ export default function Checkout() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const validateStep = (step: number): boolean => {
-    switch (step) {
-      case 1:
-        return !!(formData.firstName && formData.lastName && formData.email && formData.phone);
-      case 2:
-        return !!(formData.address && formData.city && formData.postalCode);
-      case 3:
-        return !!formData.paymentMethod;
-      default:
-        return true;
-    }
-  };
-
-  const nextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 4));
-    } else {
-      console.log("Please fill in all required fields.");
-    }
-  };
-
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-  };
-
   const handleSubmit = async () => {
-    if (!validateStep(3)) {
-      console.log("Please select a payment method.");
-      return;
-    }
-
     setIsProcessing(true);
     try {
       const payload = {
         shipping_address: {
-          name: `${formData.firstName} ${formData.lastName}`,
+          fullname: formData.fullname,
           phone: formData.phone,
-          email: formData.email,
-          country: "Bangladesh",
-          division: formData.city,
-          district: formData.city,
-          thana: "dhaka",
           address: formData.address,
-          postal_code: formData.postalCode,
         },
         payment_method: formData.paymentMethod === 'cod' ? 'cash_on_delivery' : formData.paymentMethod,
         notes: "",
@@ -216,7 +173,7 @@ export default function Checkout() {
       addNotification({
           type: "error",
           title: "Order Failed",
-          message: "There was an error placing your order. Please try again."
+          message: (error as any)?.response?.data?.message || "Failed to place order. Please try again."
         });
       console.error("Order submission error:", error);
     }
@@ -289,7 +246,7 @@ export default function Checkout() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-28">
+    <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-4">
       <SEO title="Checkout | AmarShop" description="Complete your purchase with secure checkout." />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -305,28 +262,6 @@ export default function Checkout() {
             <h1 className="text-4xl font-black text-gray-900 tracking-tight font-display">Secure <span className="text-emerald-600">Checkout</span></h1>
             <p className="text-sm text-gray-500 font-medium">Finalize your selection and we'll handle the rest.</p>
           </div>
-
-          {/* Progress bar */}
-          <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-            {steps.map((step, idx) => (
-              <div key={step.number} className="flex items-center">
-                <div className={cn(
-                  "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500",
-                  currentStep >= step.number ? "bg-emerald-600 text-white shadow-lg" : "bg-gray-50 text-gray-400"
-                )}>
-                  {currentStep > step.number ? <Check className="w-4 h-4" /> : <step.icon className="w-4 h-4" />}
-                </div>
-                {idx < steps.length - 1 && (
-                  <div className="w-4 h-1 mx-1 rounded-full bg-gray-50">
-                    <div className={cn(
-                      "h-full rounded-full transition-all duration-700 bg-emerald-600",
-                      currentStep > step.number ? "w-full" : "w-0"
-                    )} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
@@ -341,8 +276,6 @@ export default function Checkout() {
                 transition={{ duration: 0.4 }}
                 className="bg-white rounded-[2.5rem] shadow-luxury border border-gray-100 p-8 sm:p-12"
               >
-                {/* Step Content */}
-                {currentStep === 1 && (
                   <div className="space-y-8">
                     <div className="flex items-center gap-4 mb-4">
                       <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
@@ -354,132 +287,50 @@ export default function Checkout() {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Input label="First Name" value={formData.firstName} onChange={(v) => handleInputChange('firstName', v)} />
-                      <Input label="Last Name" value={formData.lastName} onChange={(v) => handleInputChange('lastName', v)} />
-                      <Input label="Email Address" type="email" value={formData.email} onChange={(v) => handleInputChange('email', v)} />
-                      <Input label="Phone Number" type="tel" value={formData.phone} onChange={(v) => handleInputChange('phone', v)} placeholder="+880 1XXX-XXXXXX" />
-                    </div>
-                  </div>
-                )}
-
-                {currentStep === 2 && (
-                  <div className="space-y-8">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-                        <MapPin className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-black text-gray-900 tracking-tight">Delivery Hub</h2>
-                        <p className="text-xs text-gray-500 font-medium">Where should we ship your artifacts?</p>
-                      </div>
-                    </div>
-                    <div className="space-y-6">
-                      <Input label="Full Street Address" value={formData.address} onChange={(v) => handleInputChange('address', v)} />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Input label="City / Region" value={formData.city} onChange={(v) => handleInputChange('city', v)} />
-                        <Input label="Postal Code" value={formData.postalCode} onChange={(v) => handleInputChange('postalCode', v)} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {currentStep === 3 && (
-                  <div className="space-y-8">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600">
-                        <Wallet className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-black text-gray-900 tracking-tight">Payment Gateway</h2>
-                        <p className="text-xs text-gray-500 font-medium">Select your preferred secure payment method.</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {[
-                        { id: 'cod', label: 'Cash on Delivery', sub: 'Pay at Door', icon: Truck },
-                      ].map((method) => (
-                        <button
-                          key={method.id}
-                          onClick={() => handleInputChange('paymentMethod', method.id as any)}
-                          className={cn(
-                            "flex items-center gap-4 p-5 rounded-3xl border-2 transition-all text-left",
-                            formData.paymentMethod === method.id 
-                              ? "border-emerald-600 bg-emerald-50/50 shadow-luxury ring-4 ring-emerald-500/10" 
-                              : "border-gray-100 bg-white hover:border-emerald-200"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
-                            formData.paymentMethod === method.id ? "bg-emerald-600 text-white" : "bg-gray-50 text-gray-400"
-                          )}>
-                            <method.icon className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-black text-gray-900 uppercase tracking-widest">{method.label}</p>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{method.sub}</p>
-                          </div>
-                          {formData.paymentMethod === method.id && (
-                            <div className="ml-auto w-5 h-5 bg-emerald-600 rounded-full flex items-center justify-center">
-                              <Check className="w-3 h-3 text-white stroke-[4]" />
-                            </div>
-                          )}
-                        </button>
-                      ))}
+                      <Input label="Full Name" value={formData.fullname} onChange={(v) => handleInputChange('fullname', v)} />
+                      <Input label="Phone Number" type="number" value={formData.phone} onChange={(v) => handleInputChange('phone', v)} placeholder="+880 1XXX-XXXXXX" />
+                      <textarea 
+                        className="md:col-span-2 px-4 py-3 rounded-2xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all text-sm font-medium text-gray-900 placeholder-gray-400 resize-none"
+                        placeholder="Enter your delivery address"
+                        rows={4}
+                        value={formData.address || ''}
+                        onChange={(e) => handleInputChange('address', e.target.value)}
+                      />
                     </div>
 
-                    {formData.paymentMethod === 'card' && (
-                      <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        className="p-6 bg-gray-50 rounded-3xl border border-gray-100 space-y-4"
-                      >
-                        <Input label="Card Number" placeholder="0000 0000 0000 0000" onChange={() => {}} />
-                        <div className="grid grid-cols-2 gap-4">
-                          <Input label="Expiry Date" placeholder="MM/YY" onChange={() => {}} />
-                          <Input label="CVV" placeholder="***" type="password" onChange={() => {}} />
+                    {/* Payment Method Section */}
+                    <div className="pt-6 border-t border-gray-100">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                          <Wallet className="w-6 h-6" />
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                          <Lock className="w-3 h-3" />
-                          Encrypted 256-bit Secure Payment
+                        <div>
+                          <h2 className="text-xl font-black text-gray-900 tracking-tight">Payment Method</h2>
+                          <p className="text-xs text-gray-500 font-medium">Select your preferred payment option.</p>
                         </div>
-                      </motion.div>
-                    )}
-                  </div>
-                )}
-
-                {currentStep === 4 && (
-                  <div className="space-y-8">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
-                        <Zap className="w-6 h-6" />
                       </div>
-                      <div>
-                        <h2 className="text-xl font-black text-gray-900 tracking-tight">Final Review</h2>
-                        <p className="text-xs text-gray-500 font-medium">Verify your details before placing the order.</p>
+                      
+                      <div className="space-y-3 mt-6">
+                        <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-2xl cursor-pointer hover:border-emerald-600 hover:bg-emerald-50 transition-all" onClick={() => handleInputChange('paymentMethod', 'cod')}>
+                          <input 
+                            type="radio" 
+                            name="payment" 
+                            value="cod"
+                            checked={formData.paymentMethod === 'cod'}
+                            onChange={() => handleInputChange('paymentMethod', 'cod')}
+                            className="w-5 h-5 text-emerald-600 rounded-full cursor-pointer"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-black text-gray-900">Cash on Delivery</p>
+                            <p className="text-[10px] text-gray-500 font-medium">Pay when your order arrives</p>
+                          </div>
+                          {formData.paymentMethod === 'cod' && (
+                            <Check className="w-5 h-5 text-emerald-600" />
+                          )}
+                        </label>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shipping To</p>
-                        <div className="p-5 bg-gray-50 rounded-3xl border border-gray-100 space-y-1">
-                          <p className="text-sm font-black text-gray-900">{formData.firstName} {formData.lastName}</p>
-                          <p className="text-xs text-gray-500 font-medium">{formData.address}</p>
-                          <p className="text-xs text-gray-500 font-medium">{formData.city}, {formData.postalCode}</p>
-                          <p className="text-xs text-gray-500 font-medium">{formData.phone}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment via</p>
-                        <div className="p-5 bg-emerald-50 rounded-3xl border border-emerald-100 flex items-center gap-4">
-                          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
-                            <Wallet className="w-5 h-5" />
-                          </div>
-                          <p className="text-sm font-black text-emerald-900 uppercase tracking-widest">{formData.paymentMethod}</p>
-                        </div>
-                      </div>
-                    </div>
-
                     <div className="pt-6 border-t border-gray-100">
                       <label className="flex items-start gap-3 cursor-pointer">
                         <input type="checkbox" className="mt-1 w-4 h-4 rounded-lg text-emerald-600 focus:ring-emerald-500/20" />
@@ -489,46 +340,19 @@ export default function Checkout() {
                       </label>
                     </div>
                   </div>
-                )}
-
+                
                 {/* Footer Navigation */}
                 <div className="flex items-center justify-between mt-12 pt-10 border-t border-gray-100">
                   <button 
-                    onClick={prevStep}
-                    disabled={currentStep === 1 || isProcessing}
-                    className="flex items-center gap-2 px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors disabled:opacity-0"
-                  >
-                    <ChevronDown className="w-4 h-4 rotate-90" />
-                    Previous Step
-                  </button>
-
-                  <button 
-                    onClick={currentStep === 4 ? handleSubmit : nextStep}
+                    onClick={handleSubmit}
                     disabled={isProcessing}
                     className="flex items-center gap-3 px-10 py-5 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 shadow-2xl transition-all active:scale-95 disabled:opacity-50"
                   >
-                    {isProcessing ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        Authorizing...
-                      </>
-                    ) : (
-                      <>
-                        {currentStep === 4 ? "Authorize Payment" : "Continue Checkout"}
-                        <ChevronRight className="w-4 h-4" />
-                      </>
-                    )}
+                    Place Order
                   </button>
                 </div>
               </motion.div>
             </AnimatePresence>
-
-            <div className="mt-8 flex items-center justify-center gap-6 opacity-40 grayscale pointer-events-none">
-              <ShieldCheck className="w-12 h-12" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MC" className="h-8" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-6" />
-            </div>
           </div>
 
           {/* Sidebar Summary */}

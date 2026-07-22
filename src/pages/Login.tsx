@@ -20,7 +20,6 @@ export default function Login({ setIsProfileOpen }: LoginProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [profileData, setProfileData] = useState<any>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const from = location.state?.from?.pathname || "/";
 
@@ -42,7 +41,6 @@ export default function Login({ setIsProfileOpen }: LoginProps) {
         localStorage.setItem("access_token", response.data.data.access_token);
         if (setIsProfileOpen) {
           setIsProfileOpen(true);
-          setIsAuthenticated(true);
         }
           try {
             const profileResponse: any = await api.get("/profile", {
@@ -176,34 +174,6 @@ export default function Login({ setIsProfileOpen }: LoginProps) {
                 Sign up
               </Link>
             </p>
-          </div>
-
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-bold text-gray-500 hover:bg-gray-50 transition-all"
-                aria-label="Continue with Google"
-              >
-                Google
-              </button>
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-bold text-gray-500 hover:bg-gray-50 transition-all"
-                aria-label="Continue with Facebook"
-              >
-                Facebook
-              </button>
-            </div>
           </div>
         </div>
       </div>
