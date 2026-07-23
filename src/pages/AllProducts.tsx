@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
 import { Filter, SlidersHorizontal, ChevronDown, Grid, List, X } from "lucide-react";
 import SEO from "../components/SEO";
-import { cn } from "../lib/utils";
+import { cn, slugify } from "../lib/utils";
+import { useLocation } from "react-router-dom";
 import api from "../services/api";
 
 const SORT_OPTIONS = [
@@ -23,11 +24,13 @@ const PRICE_RANGES = [
 interface Category {
   id: number;
   name: string;
+  slug?: string;
 }
 
 interface Brand {
   id: number;
   name: string;
+  slug?: string;
 }
 type Product = {
   id: string;
@@ -47,6 +50,7 @@ type Product = {
 };
 
 export default function AllProducts() {
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("newest");
@@ -56,18 +60,39 @@ export default function AllProducts() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
+  const [selectedBrandSlug, setSelectedBrandSlug] = useState<string | null>(null);
 
   const [priceRange, setPriceRange] = useState<{label: string, min: number, max: number} | null>(null);
  
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(location.search);
     const categorySlug = urlParams.get("category");
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const routeType = pathParts[0];
+    const routeSlug = pathParts[1] ? decodeURIComponent(pathParts[1]) : null;
+
+    if (routeType === "category" && routeSlug) {
+      setSelectedCategorySlug(routeSlug);
+      setSelectedBrandSlug(null);
+      return;
+    }
+
+    if (routeType === "brand" && routeSlug) {
+      setSelectedBrandSlug(routeSlug);
+      setSelectedCategorySlug(null);
+      return;
+    }
+
+    setSelectedBrandSlug(null);
     if (categorySlug) {
       setSelectedCategorySlug(categorySlug);
+      return;
     }
-  }, []);
+
+    setSelectedCategorySlug(null);
+  }, [location.pathname, location.search]);
   useEffect(() => {
     const fetchCategories = async () => {
         try {
@@ -98,6 +123,29 @@ export default function AllProducts() {
 
     fetchBrands();
   }, []);
+
+  useEffect(() => {
+    if (!selectedCategorySlug || !categories.length) {
+      return;
+    }
+
+    const matchedCategory = categories.find((category) => slugify(category.slug ?? category.name) === selectedCategorySlug);
+    if (matchedCategory && selectedCategory !== matchedCategory.id) {
+      setSelectedCategory(matchedCategory.id);
+    }
+  }, [categories, selectedCategory, selectedCategorySlug]);
+
+  useEffect(() => {
+    if (!selectedBrandSlug || !brands.length) {
+      return;
+    }
+
+    const matchedBrand = brands.find((brand) => slugify(brand.slug ?? brand.name) === selectedBrandSlug);
+    if (matchedBrand && !selectedBrands.includes(matchedBrand.id)) {
+      setSelectedBrands([matchedBrand.id]);
+    }
+  }, [brands, selectedBrandSlug, selectedBrands]);
+
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
@@ -110,7 +158,9 @@ export default function AllProducts() {
             params.category_slug = selectedCategorySlug;
         }
 
-        if (selectedBrands.length) {
+        if (selectedBrandSlug) {
+          params.brand_slug = selectedBrandSlug;
+        } else if (selectedBrands.length) {
             params.brand_id = selectedBrands[0];
         }
 
@@ -183,6 +233,7 @@ export default function AllProducts() {
     setSelectedCategory(null);
     setSelectedCategorySlug(null);
     setSelectedBrands([]);
+    setSelectedBrandSlug(null);
     setPriceRange(null);
   };
 
@@ -262,6 +313,7 @@ export default function AllProducts() {
                               : category.id
                         );
                         setSelectedCategorySlug(null);
+                        setSelectedBrandSlug(null);
                       }}
                       className={cn(
                         "w-full flex items-center justify-between text-xs font-bold uppercase tracking-widest py-2 px-3 rounded-xl transition-all",
@@ -332,6 +384,7 @@ export default function AllProducts() {
                               setSelectedBrands([brand.id]);
 
                           }
+                            setSelectedBrandSlug(null);
                         }}
                         className={cn(
                           "px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all text-center",
@@ -461,7 +514,12 @@ export default function AllProducts() {
                     {categories.map(category => (
                       <button 
                         key={category.id}
-                        onClick={() => setSelectedCategory(category.id === selectedCategory ? null : category.id)}
+                        onClick={() => {
+                          setSelectedCategory(category.id === selectedCategory ? null : category.id);
+                          setSelectedCategorySlug(null);
+                          setSelectedBrandSlug(null);
+                        }}
+                        
                         className={cn(
                           "w-full flex items-center justify-between text-xs font-bold uppercase tracking-widest py-2 px-3 rounded-xl transition-all",
                           (selectedCategory === category.id)
@@ -518,6 +576,7 @@ export default function AllProducts() {
                             } else {
                               setSelectedBrands([...selectedBrands, brand.id]);
                             }
+                            setSelectedBrandSlug(null);
                           }}
                           className={cn(
                             "px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all text-center",

@@ -1,32 +1,63 @@
+import { useEffect, useMemo, useState } from "react";
 import { Mail, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
+import api from "../services/api";
 
-const NAV_LINKS = [
-  { name: "Home", href: "/" },
-  { name: "Flash Deal", href: "/flash-deal" },
-  { name: "All Products", href: "/allproducts" },
-  { name: "Seller Shop", href: "/seller-shop" },
-  { name: "Compare", href: "/compare" },
-  { name: "Blogs", href: "/blogs" },
-  { name: "Contact Us", href: "/contact" },
-];
+  // const FALLBACK_NAV_LINKS = [
+  //   { name: "Home", href: "/" },
+  //   { name: "Flash Deal", href: "/flash-deal" },
+  //   { name: "All Products", href: "/allproducts" },
+  //   { name: "Seller Shop", href: "/seller-shop" },
+  //   { name: "Compare", href: "/compare" },
+  //   { name: "Blogs", href: "/blogs" },
+  //   { name: "Contact Us", href: "/contact" },
+  // ];
 
-interface Settings {
-  site_name: string;
-  site_title: string;
-  site_description: string;
-  site_email: string;
-  site_phone: string;
-  site_address: string;
-  free_shipping_text: string;
-  copyright_text: string;
-  site_logo: string;
-  site_favicon: string;
+interface MenuItem {
+  id: number;
+  title: string;
+  url: string;
+  position: number;
+}
+
+interface MenuApiResponse {
+  success: boolean;
+  data?: {
+    menus?: Array<{
+      items?: MenuItem[];
+    }>;
+  };
 }
 
 export default function SubNavbar({ onCategoriesClick }: { onCategoriesClick?: () => void }) {
-  const { settings = {} as Settings } = useSettings() as { settings?: Settings };
+  const { settings } = useSettings();
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+
+  useEffect(() => {
+    const loadMenus = async () => {
+      try {
+        const response = await api.get<MenuApiResponse>("/menus/location/main-navigation");
+        const items = response.data?.data?.menus?.[0]?.items ?? [];
+        setMenuItems([...items].sort((a, b) => a.position - b.position));
+      } catch (error) {
+        console.error("Failed to fetch main navigation menus:", error);
+      }
+    };
+
+    loadMenus();
+  }, []);
+
+  const navLinks = useMemo(() => {
+    if (!menuItems.length) {
+      return [];
+    }
+
+    return menuItems.map((item) => ({
+      name: item.title,
+      href: item.url || "#",
+    }));
+  }, [menuItems]);
 
   return (
     <div className="hidden md:block bg-white border-b border-gray-100 sticky top-[80px] z-40 shadow-sm">
@@ -46,9 +77,9 @@ export default function SubNavbar({ onCategoriesClick }: { onCategoriesClick?: (
 
           {/* Center: Page Navigation Bar */}
           <div className="flex items-center gap-4 lg:gap-6 flex-1 px-4 lg:px-8 overflow-x-auto no-scrollbar">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link, index) => (
               <Link
-                key={link.name}
+                key={`${link.name}-${index}`}
                 to={link.href}
                 className="text-[10px] lg:text-[11px] font-bold text-gray-700 uppercase tracking-wider hover:text-[#0056b3] transition-colors whitespace-nowrap"
               >

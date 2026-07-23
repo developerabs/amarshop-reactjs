@@ -145,7 +145,7 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
                       commerce.setCategoryFilter(cat.name);
                       commerce.setSearchQuery("");
                       onClose();
-                      navigate(`/allproducts?category=${cat.slug}`);
+                      navigate(`/shop?category=${cat.slug}`);
                     }}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}

@@ -8,15 +8,32 @@ import { useCommerce } from "../context/CommerceContext";
 import { useSettings } from "../context/SettingsContext";
 import api from "../services/api";
 
-const MOBILE_NAV_LINKS = [
-  { name: "Home", href: "/" },
-  { name: "Flash Deal", href: "/flash-deal" },
-  { name: "All Products", href: "/allproducts" },
-  { name: "Seller Shop", href: "/seller-shop" },
-  { name: "Compare", href: "/compare" },
-  { name: "Blogs", href: "/blogs" },
-  { name: "Contact Us", href: "/contact" },
-];
+// const FALLBACK_MOBILE_NAV_LINKS = [
+//   { name: "Home", href: "/" },
+//   { name: "Flash Deal", href: "/flash-deal" },
+//   { name: "All Products", href: "/allproducts" },
+//   { name: "Seller Shop", href: "/seller-shop" },
+//   { name: "Compare", href: "/compare" },
+//   { name: "Blogs", href: "/blogs" },
+//   { name: "Contact Us", href: "/contact" },
+// ];
+
+type MenuItem = {
+  id: number;
+  title: string;
+  url: string;
+  position: number;
+};
+
+type MenuApiResponse = {
+  success: boolean;
+  data?: {
+    menus?: Array<{
+      items?: MenuItem[];
+    }>;
+  };
+};
+
 type Settings = {
   site_name?: string;
   site_logo?: string;
@@ -69,6 +86,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult>({ categories: [], brands: [], products: [] });
   const [recentSearches, setRecentSearches] = useState<SearchResult['products']>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const navigate = useNavigate();
 
   const categories = ["All Categories", "Fashion", "Electronics", "Home", "Beauty", "Groceries"];
@@ -83,6 +101,25 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
   };
   
   const { settings } = useSettings() as { settings?: Settings };
+
+  useEffect(() => {
+    const loadMenus = async () => {
+      try {
+        const response = await api.get<MenuApiResponse>("/menus/location/main-navigation");
+        const items = response.data?.data?.menus?.[0]?.items ?? [];
+        setMenuItems([...items].sort((a, b) => a.position - b.position));
+      } catch (error) {
+        console.error("Failed to fetch main navigation menus:", error);
+      }
+    };
+
+    loadMenus();
+  }, []);
+
+  const mobileNavLinks = menuItems.length
+    ? menuItems.map((item) => ({ name: item.title, href: item.url || "#" }))
+    : [];
+
   useEffect(() => {
     const searchResults = async () => {
       if (searchQuery.trim() === "") {
@@ -156,13 +193,11 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
           </div>
           <div className="flex items-center gap-3 sm:gap-5">
             <div className="hidden sm:flex items-center gap-4 text-gray-400">
-              <button className="hover:text-white transition-colors">Track Order</button>
-              <button className="hover:text-white transition-colors">Help Center</button>
+              <button className="hover:text-white transition-colors" onClick={() => navigate('/orders/track-order')}>Track Order</button>
             </div>
             <div className="hidden sm:block h-2.5 w-[1px] bg-white/10" />
-            <button className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors font-black">
+            <button className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors font-black" onClick={() => navigate('/orders/track-order')}>
               <span className="sm:hidden">Track Order</span>
-              <span className="hidden sm:inline">BN</span>
             </button>
           </div>
         </div>
@@ -473,9 +508,9 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
               <div className="flex-1 overflow-y-auto no-scrollbar p-4">
                 {activeTab === 'menu' ? (
                   <div className="space-y-0.5">
-                    {MOBILE_NAV_LINKS.map(link => (
+                    {mobileNavLinks.map((link, index) => (
                       <button
-                        key={link.name}
+                        key={`${link.name}-${index}`}
                         onClick={() => {
                           navigate(link.href);
                           setIsMobileMenuOpen(false);

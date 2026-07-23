@@ -1,46 +1,168 @@
 import React, { useState, useEffect } from "react";
 import { Truck, Search, CheckCircle, Package, MapPin, Clock, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useParams } from "react-router-dom";
 import SEO from "../components/SEO";
 import { cn } from "../lib/utils";
+import api from "../services/api";
 
-const TRACKING_STEPS = [
-  { id: "ordered", label: "Order Placed", date: "May 10, 2026, 02:30 PM", icon: Package },
-  { id: "processed", label: "Processing", date: "May 10, 2026, 04:15 PM", icon: Clock },
-  { id: "shipped", label: "In Transit", date: "May 11, 2026, 09:00 AM", icon: Truck },
-  { id: "delivered", label: "Delivered", date: "Estimated May 13, 2026", icon: CheckCircle },
+const BASE_TRACKING_STEPS = [
+  { id: "ordered", label: "Order Placed", icon: Package },
+  { id: "processed", label: "Processing", icon: Clock },
+  { id: "shipped", label: "In Transit", icon: Truck },
+  { id: "delivered", label: "Delivered", icon: CheckCircle },
 ];
 
+type OrderStatus = "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+
+interface OrderItem {
+  product_id: number;
+  quantity: number;
+  price: string;
+  total: string | null;
+}
+
+interface OrderAddress {
+  name: string;
+  phone: string;
+  email: string | null;
+  country: string | null;
+  division: string | null;
+  district: string | null;
+  thana: string | null;
+  address: string;
+  postal_code: string | null;
+}
+
+interface TrackedOrder {
+  order_id: string;
+  subtotal: string;
+  discount_amount: string;
+  coupon_discount: string;
+  tax_amount: string;
+  shipping_charge: string;
+  grand_total: string;
+  payment_method: string;
+  payment_status: string;
+  order_status: OrderStatus;
+  placed_at: string;
+  order_items: OrderItem[];
+  order_address: OrderAddress | null;
+}
+
+interface TrackOrderResponse {
+  success: boolean;
+  message: string;
+  data: TrackedOrder;
+}
+
+const statusToStep: Record<OrderStatus, number> = {
+  pending: 0,
+  processing: 1,
+  shipped: 2,
+  delivered: 3,
+  cancelled: 0,
+};
+
+function formatMoney(value: string | number): string {
+  const numericValue = typeof value === "string" ? Number.parseFloat(value) : value;
+  if (Number.isNaN(numericValue)) return "0";
+  return numericValue.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDateTime(value: string): string {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-BD", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function OrderTracking() {
+  const { orderId: routeOrderId } = useParams<{ orderId?: string }>();
   const [orderId, setOrderId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [trackingData, setTrackingData] = useState<any>(null);
+  const [trackingData, setTrackingData] = useState<TrackedOrder | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleTrack = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!orderId) return;
+  useEffect(() => {
+    if (!routeOrderId || routeOrderId === "track-order") {
+      return;
+    }
 
+    setOrderId(routeOrderId);
+  }, [routeOrderId]);
+
+  const fetchTrackOrder = async (id: string) => {
     setIsSearching(true);
-    // Simulate API call
-    setTimeout(() => {
-      setTrackingData({
-        id: orderId,
-        status: "shipped",
-        currentStep: 2,
-        estimatedDelivery: "May 13, 2026",
-        shippingAddress: "House 24, Road 7, Banani, Dhaka, Bangladesh",
-        items: [
-          { name: "Traditional Silk Saree", price: 8500, qty: 1 },
-          { name: "Gold Plated Bangle Set", price: 4200, qty: 2 }
-        ]
-      });
+    setErrorMessage("");
+    setTrackingData(null);
+
+    try {
+      const response = await api.get<TrackOrderResponse>(`/orders/track-order/${encodeURIComponent(id)}`);
+
+      if (response.data?.success) {
+        setTrackingData(response.data.data);
+      } else {
+        setErrorMessage(response.data?.message || "Unable to track this order right now.");
+      }
+    } catch (error: any) {
+      const serverMessage = error?.response?.data?.message;
+      setErrorMessage(serverMessage || "Order not found. Please check your Order ID and try again.");
+    } finally {
       setIsSearching(false);
-    }, 1500);
+    }
   };
+
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedOrderId = orderId.trim();
+    if (!trimmedOrderId) return;
+
+    await fetchTrackOrder(trimmedOrderId);
+  };
+
+  useEffect(() => {
+    if (!orderId || orderId === "track-order") {
+      return;
+    }
+
+    // fetchTrackOrder(orderId);
+  }, [orderId]);
+
+  const currentStep = trackingData ? statusToStep[trackingData.order_status] ?? 0 : 0;
+  const placedAt = trackingData ? formatDateTime(trackingData.placed_at) : "";
+  const trackingSteps = BASE_TRACKING_STEPS.map((step, index) => ({
+    ...step,
+    date:
+      index <= currentStep
+        ? placedAt
+        : index === currentStep + 1
+          ? "Up next"
+          : "Pending",
+  }));
+
+  const fullAddress = trackingData?.order_address
+    ? [
+        trackingData.order_address.address,
+        trackingData.order_address.thana,
+        trackingData.order_address.district,
+        trackingData.order_address.division,
+        trackingData.order_address.country,
+        trackingData.order_address.postal_code,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "Address not available";
 
   return (
     <main className="min-h-screen bg-gray-50 pb-20 pt-28">
@@ -69,7 +191,7 @@ export default function OrderTracking() {
                 type="text"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
-                placeholder="Enter Order ID (e.g. TC-123456)"
+                placeholder="Enter Order ID (e.g. ORD-6A607A9C90516)"
                 className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold"
               />
             </div>
@@ -84,6 +206,10 @@ export default function OrderTracking() {
               )}
             </button>
           </form>
+
+          {errorMessage && (
+            <p className="mt-4 text-sm font-bold text-red-600">{errorMessage}</p>
+          )}
         </div>
 
         <AnimatePresence mode="wait">
@@ -98,11 +224,11 @@ export default function OrderTracking() {
                 <div className="flex justify-between items-end mb-12">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-2">Order Tracking</p>
-                    <h2 className="text-2xl font-black text-gray-900">ID: {trackingData.id}</h2>
+                    <h2 className="text-2xl font-black text-gray-900">ID: {trackingData.order_id}</h2>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Estimated Arrival</p>
-                    <p className="text-lg font-black text-gray-900">{trackingData.estimatedDelivery}</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Order Status</p>
+                    <p className="text-lg font-black text-gray-900 capitalize">{trackingData.order_status.replace(/_/g, " ")}</p>
                   </div>
                 </div>
 
@@ -111,15 +237,15 @@ export default function OrderTracking() {
                   <div className="absolute top-6 left-0 w-full h-1 bg-gray-100 hidden sm:block">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: `${(trackingData.currentStep / (TRACKING_STEPS.length - 1)) * 100}%` }}
+                      animate={{ width: `${(currentStep / (trackingSteps.length - 1)) * 100}%` }}
                       className="h-full bg-emerald-500"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 relative z-10">
-                    {TRACKING_STEPS.map((step, i) => {
-                      const isCompleted = i <= trackingData.currentStep;
-                      const isCurrent = i === trackingData.currentStep;
+                    {trackingSteps.map((step, i) => {
+                      const isCompleted = i <= currentStep;
+                      const isCurrent = i === currentStep;
                       
                       return (
                         <div key={step.id} className="flex sm:flex-col items-center sm:items-center gap-4 sm:gap-4">
@@ -152,9 +278,9 @@ export default function OrderTracking() {
                     <MapPin className="w-5 h-5 text-emerald-600" />
                     <h3 className="text-lg font-black text-gray-900">Delivery Address</h3>
                   </div>
-                  <p className="text-sm font-bold text-gray-600 leading-relaxed">
-                    {trackingData.shippingAddress}
-                  </p>
+                  <p className="text-sm font-bold text-gray-600 leading-relaxed">{trackingData.order_address?.name || "N/A"}</p>
+                  <p className="text-sm font-bold text-gray-600 leading-relaxed">{trackingData.order_address?.phone || "N/A"}</p>
+                  <p className="text-sm font-bold text-gray-600 leading-relaxed">{fullAddress}</p>
                 </div>
 
                 <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl">
@@ -163,15 +289,30 @@ export default function OrderTracking() {
                     <h3 className="text-lg font-black text-gray-900">Shipment Details</h3>
                   </div>
                   <div className="space-y-4">
-                    {trackingData.items.map((item: any, i: number) => (
+                    {trackingData.order_items.map((item, i) => (
                       <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
                         <div>
-                          <p className="text-sm font-bold text-gray-900">{item.name}</p>
-                          <p className="text-[10px] font-bold text-gray-400">Qty: {item.qty}</p>
+                          <p className="text-sm font-bold text-gray-900">Product #{item.product_id}</p>
+                          <p className="text-[10px] font-bold text-gray-400">Qty: {item.quantity}</p>
                         </div>
-                        <p className="text-sm font-black text-gray-900">৳{item.price.toLocaleString()}</p>
+                        <p className="text-sm font-black text-gray-900">Tk {formatMoney(item.total ?? Number.parseFloat(item.price) * item.quantity)}</p>
                       </div>
                     ))}
+
+                    <div className="pt-4 mt-2 border-t border-gray-100 space-y-1 text-xs font-bold text-gray-500">
+                      <div className="flex justify-between"><span>Subtotal</span><span>Tk {formatMoney(trackingData.subtotal)}</span></div>
+                      <div className="flex justify-between"><span>Discount</span><span>- Tk {formatMoney(trackingData.discount_amount)}</span></div>
+                      <div className="flex justify-between"><span>Tax</span><span>Tk {formatMoney(trackingData.tax_amount)}</span></div>
+                      <div className="flex justify-between"><span>Shipping</span><span>Tk {formatMoney(trackingData.shipping_charge)}</span></div>
+                      <div className="flex justify-between text-sm text-gray-900 font-black pt-2">
+                        <span>Grand Total</span>
+                        <span>Tk {formatMoney(trackingData.grand_total)}</span>
+                      </div>
+                      <div className="flex justify-between pt-2">
+                        <span className="uppercase">Payment</span>
+                        <span className="capitalize">{trackingData.payment_method.replace(/_/g, " ")} ({trackingData.payment_status})</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

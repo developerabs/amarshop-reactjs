@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { FAQS } from "../data/mockData";
 import { cn } from "../lib/utils";
+import { useNavigate } from "react-router-dom";
 
 export default function FAQSection() {
+  const navigate = useNavigate();
   const [openId, setOpenId] = useState<string | null>(null);
 
   const toggleFaq = (id: string) => {
@@ -80,7 +82,7 @@ export default function FAQSection() {
 
         <div className="mt-10 text-center">
           <p className="text-sm text-gray-500 mb-4">Still have questions?</p>
-          <button className="px-6 py-2.5 bg-gray-900 text-white rounded-full font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-gray-200">
+          <button onClick={() => { navigate('/contact')}} className="px-6 py-2.5 bg-gray-900 text-white rounded-full font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-gray-200">
             Contact Support
           </button>
         </div>

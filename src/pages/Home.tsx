@@ -83,7 +83,6 @@ export default function Home({ onCategorySeeMore, onAddToCart }: HomeProps) {
         <BrandsSection />
         <ClientReviews />
         <FAQSection />
-        <Newsletter />
       </div>
     </main>
   );

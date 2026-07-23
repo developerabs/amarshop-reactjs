@@ -99,7 +99,7 @@ export default function ProductGrid({ title, highlightWord, type, onAddToCart }:
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/allproducts')}
+              onClick={() => navigate('/shop')}
               className="group relative flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-600 text-white font-bold text-[9px] uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/10 overflow-hidden"
             >
               <span className="relative z-10">See More</span>

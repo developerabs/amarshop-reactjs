@@ -69,7 +69,7 @@ export default function ProductCollection({ title, highlight, products, bgColor 
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/allproducts')}
+            onClick={() => navigate('/shop')}
             className="px-8 py-3 rounded-2xl bg-gray-900 text-white font-bold text-sm hover:bg-black transition-all shadow-xl shadow-black/10"
           >
             Explore All Products

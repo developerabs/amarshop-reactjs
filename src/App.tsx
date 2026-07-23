@@ -41,6 +41,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Checkout = lazy(() => import("./pages/Checkout"));
+const DynamicPage = lazy(() => import("./pages/DynamicPage"));
 
 function AppShell() {
   const navigate = useNavigate();
@@ -80,7 +81,10 @@ function AppShell() {
       <Suspense fallback={<div className="min-h-[70vh] flex items-center justify-center text-gray-600">Loading page…</div>}>
         <Routes>
           <Route path="/" element={<Home onCategorySeeMore={() => setIsCategoryOverlayOpen(true)} onAddToCart={(productId) => addToCart(Number(productId))} />} />
-          <Route path="/allproducts" element={<AllProducts />} />
+          <Route path="/shop" element={<AllProducts />} />
+          <Route path="/category/:categoryName" element={<AllProducts />} />
+          <Route path="/brand/:brandName" element={<AllProducts />} />
+          <Route path="/:pageName" element={<DynamicPage />} />
           <Route path="/product/:productName" element={<ProductDetails />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/flash-deal" element={<FlashDeal />} />

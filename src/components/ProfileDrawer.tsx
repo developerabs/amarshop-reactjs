@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import api from "../services/api";
 import { useState, useEffect } from "react";
-
+import { useCommerce } from "../context/CommerceContext";
 interface ProfileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,6 +12,7 @@ interface ProfileDrawerProps {
 
 export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const navigate = useNavigate();
+  const { wishlistCount } = useCommerce();
   const accessToken = localStorage.getItem("access_token");
   const authChecked = accessToken ? true : false;
   const [profileData, setProfileData] = useState<any>(null);
@@ -60,15 +61,11 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
   const totalOrders = profileData?.total_orders || 0;
   const totalSpent = profileData?.total_spent_amount || 0;
-  const totalWishlist = profileData?.total_wishlist_items || 0;
+  const totalWishlist = wishlistCount || 0;
 
   const menuItems = [
     { icon: Package, label: "My Orders", count: totalOrders, color: "text-blue-600", bg: "bg-blue-50" },
     { icon: Heart, label: "My Wishlist", count: totalWishlist, color: "text-pink-600", bg: "bg-pink-50" },
-    { icon: Bell, label: "Notifications", count: 3, color: "text-orange-600", bg: "bg-orange-50" },
-    { icon: CreditCard, label: "Payment Methods", color: "text-emerald-600", bg: "bg-emerald-50" },
-    { icon: MapPin, label: "Shipping Address", color: "text-purple-600", bg: "bg-purple-50" },
-    { icon: Shield, label: "Privacy & Security", color: "text-gray-600", bg: "bg-gray-100" },
     { icon: Settings, label: "Account Settings", color: "text-gray-600", bg: "bg-gray-100" },
   ];
 
@@ -211,7 +208,7 @@ export default function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 Logout Account
               </button>
               <p className="mt-3 text-[8px] font-bold text-gray-400 text-center uppercase tracking-widest">
-                Member Since {user.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
+                Member Since: {user.created_at ? new Date(user.created_at).toLocaleDateString('en-BD', { day: 'numeric', month: 'long', year: 'numeric' }) : "N/A"}
               </p>
             </div>
           </motion.div>

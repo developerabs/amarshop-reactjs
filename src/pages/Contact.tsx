@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSettings } from "../context/SettingsContext";
+import api from "../services/api";
 
 interface Settings {
   site_email?: string;
@@ -9,7 +10,7 @@ interface Settings {
 
 export default function Contact() {
   const { settings } = useSettings() as { settings?: Settings };
-  const [formState, setFormState] = useState({ name: "", email: "", subject: "", message: "" });
+  const [formState, setFormState] = useState({ name: "", email: "", phone: "", message: "" });
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
   useEffect(() => {
@@ -18,7 +19,20 @@ export default function Contact() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setStatus("success");
+    setStatus("idle");
+    api.post("/contact/submit", formState)
+      .then((response) => {
+        console.log("Contact form submitted successfully:", response);
+        setStatus("success");
+        setFormState({ name: "", email: "", phone: "", message: "" });
+        setTimeout(() => {
+          setStatus("idle");
+        }, 5000); // Reset status after 5 seconds
+      })
+      .catch((error) => {
+        console.error("Error submitting contact form:", error);
+        setStatus("error");
+      });
   };
 
   return (
@@ -35,7 +49,7 @@ export default function Contact() {
               <form onSubmit={handleSubmit} className="mt-10 space-y-5">
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2 text-sm font-bold text-gray-700">
-                    Name
+                    Name*
                     <input
                       value={formState.name}
                       onChange={(e) => setFormState((prev) => ({ ...prev, name: e.target.value }))}
@@ -44,7 +58,7 @@ export default function Contact() {
                     />
                   </label>
                   <label className="space-y-2 text-sm font-bold text-gray-700">
-                    Email
+                    Email*
                     <input
                       type="email"
                       value={formState.email}
@@ -56,17 +70,17 @@ export default function Contact() {
                 </div>
 
                 <label className="space-y-2 text-sm font-bold text-gray-700 block">
-                  Subject
+                  Phone
                   <input
-                    value={formState.subject}
-                    onChange={(e) => setFormState((prev) => ({ ...prev, subject: e.target.value }))}
-                    required
+                    value={formState.phone}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, phone: e.target.value }))}
+                    // optional
                     className="w-full rounded-3xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
                   />
                 </label>
 
                 <label className="space-y-2 text-sm font-bold text-gray-700 block">
-                  Message
+                  Message*
                   <textarea
                     value={formState.message}
                     onChange={(e) => setFormState((prev) => ({ ...prev, message: e.target.value }))}

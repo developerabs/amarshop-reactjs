@@ -22,7 +22,7 @@ export default function BottomNav({ onCartClick, onWishlistClick, onProfileClick
 
   const navItems = [
     { icon: Home, label: "Home", active: location.pathname === "/", onClick: () => navigate("/") },
-    { icon: Grid, label: "All Products", active: location.pathname === "/allproducts", onClick: () => navigate("/allproducts") },
+    { icon: Grid, label: "All Products", active: location.pathname === "/shop", onClick: () => navigate("/shop") },
     { icon: ShoppingCart, label: "Cart", badge: cartCount > 0 ? cartCount : undefined, onClick: onCartClick },
     { icon: Heart, label: "Wishlist", badge: wishlistCount > 0 ? wishlistCount : undefined, onClick: onWishlistClick },
     { icon: User, label: "Profile", onClick: handleProfileClick },

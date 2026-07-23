@@ -32,7 +32,7 @@ interface Order {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "wishlist" | "addresses" | "payments" | "settings">("overview");
-  const { wishlist } = useCommerce();
+  const { wishlistCount } = useCommerce();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
@@ -126,10 +126,6 @@ export default function Dashboard() {
             <p className="text-gray-500 font-medium">Welcome back, <span className="text-gray-900 font-black">{dashboardData?.user?.name}</span>. Here's what's happening with your account.</p>
           </div>
           <div className="flex gap-3">
-            <button className="p-3 rounded-2xl bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-emerald-600 transition-colors relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-            </button>
             <button onClick={handleLogout} className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
               <LogOut className="w-4 h-4" />
               Sign Out
@@ -159,8 +155,6 @@ export default function Dashboard() {
                   { id: "overview", label: "Overview", icon: ShieldCheck },
                   { id: "orders", label: "My Orders", icon: Package },
                   { id: "wishlist", label: "Wishlist", icon: Heart },
-                  { id: "addresses", label: "Addresses", icon: MapPin },
-                  { id: "payments", label: "Payments", icon: CreditCard },
                   { id: "settings", label: "Settings", icon: Settings },
                 ].map((item) => (
                   <button
@@ -181,18 +175,6 @@ export default function Dashboard() {
                 ))}
               </nav>
             </div>
-
-            {/* Promo Card */}
-            <div className="bg-emerald-600 rounded-4xl p-8 text-white relative overflow-hidden group shadow-2xl">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/20 transition-all" />
-              <div className="relative z-10 space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80">Membership Perk</p>
-                <h4 className="text-xl font-black leading-tight">Get 10% off your next luxury purchase.</h4>
-                <button className="w-full py-3 bg-white text-emerald-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform shadow-lg">
-                  Claim Reward
-                </button>
-              </div>
-            </div>
           </aside>
 
           {/* Content Area */}
@@ -212,7 +194,7 @@ export default function Dashboard() {
                       {[
                         { label: "Active Orders", value: dashboardData?.total_orders ?? 0, icon: ShoppingBag, color: "text-emerald-600", bg: "bg-emerald-50" },
                         { label: "Total Spent", value: dashboardData?.total_spent_amount ?? 0, icon: CreditCard, color: "text-blue-600", bg: "bg-blue-50" },
-                        { label: "Wishlist", value: dashboardData?.total_wishlist_items ?? 0, icon: Heart, color: "text-red-600", bg: "bg-red-50" },
+                        { label: "Wishlist", value: wishlistCount ?? 0, icon: Heart, color: "text-red-600", bg: "bg-red-50" },
                       ].map((stat, i) => (
                         <div key={i} className="bg-white rounded-3xl p-8 shadow-luxury border border-gray-50 flex items-center justify-between">
                           <div className="space-y-1">
@@ -258,7 +240,7 @@ export default function Dashboard() {
                                 </span>
                               </div>
                               <button 
-                                onClick={() => navigate(`/orders/${order.id}`)}
+                                onClick={() => navigate(`/orders/${order.order_no}`)}
                                 className="p-3 bg-gray-900 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-600"
                               >
                                 <ExternalLink className="w-4 h-4" />
@@ -298,7 +280,7 @@ export default function Dashboard() {
                                 </span>
                               </div>
                               <button 
-                                onClick={() => navigate(`/orders/${order.id}`)}
+                                onClick={() => navigate(`/orders/${order.order_number}`)}
                                 className="p-3 bg-gray-900 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-600"
                               >
                                 <ExternalLink className="w-4 h-4" />

@@ -1,9 +1,97 @@
+import { useEffect, useMemo, useState } from "react";
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, ShieldCheck, Truck, RotateCcw, Headphones } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
+import api from "../services/api";
 
+interface FooterMenuItem {
+  id: number;
+  title: string;
+  url: string;
+  position: number;
+}
+
+interface FooterMenuApiResponse {
+  success: boolean;
+  data?: {
+    menus?: Array<{
+      items?: FooterMenuItem[];
+    }>;
+  };
+}
+
+interface FooterLink {
+  name: string;
+  href: string;
+}
+
+const FALLBACK_FOOTER_LINKS = [
+  { name: "Privacy", href: "/privacy" },
+  { name: "Terms", href: "/terms" },
+  { name: "Cookies", href: "/privacy" },
+];
+
+const FALLBACK_COMPANY_LINKS: FooterLink[] = [
+  { name: "Our Story", href: "#" },
+  { name: "Careers", href: "#" },
+  { name: "Press Office", href: "#" },
+  { name: "Sustainability", href: "#" },
+];
 
 export default function Footer() {
-  const { settings, loading } = useSettings();
+  const { settings } = useSettings();
+  const [footerMenuItems, setFooterMenuItems] = useState<FooterMenuItem[]>([]);
+  const [companyMenuItems, setCompanyMenuItems] = useState<FooterMenuItem[]>([]);
+
+  useEffect(() => {
+    const loadFooterMenus = async () => {
+      try {
+        const response = await api.get<FooterMenuApiResponse>("/menus/location/footer-menu");
+        const items = response.data?.data?.menus?.[0]?.items ?? [];
+        setFooterMenuItems([...items].sort((a, b) => a.position - b.position));
+      } catch (error) {
+        console.error("Failed to fetch footer menus:", error);
+      }
+    };
+
+    loadFooterMenus();
+  }, []);
+
+  useEffect(() => {
+    const loadCompanyMenus = async () => {
+      try {
+        const response = await api.get<FooterMenuApiResponse>("/menus/location/company-menu");
+        const items = response.data?.data?.menus?.[0]?.items ?? [];
+        setCompanyMenuItems([...items].sort((a, b) => a.position - b.position));
+      } catch (error) {
+        console.error("Failed to fetch company menus:", error);
+      }
+    };
+
+    loadCompanyMenus();
+  }, []);
+
+  const footerLinks = useMemo(() => {
+    if (!footerMenuItems.length) {
+      return FALLBACK_FOOTER_LINKS;
+    }
+
+    return footerMenuItems.map((item) => ({
+      name: item.title,
+      href: item.url || "#",
+    }));
+  }, [footerMenuItems]);
+
+  const companyLinks = useMemo(() => {
+    if (!companyMenuItems.length) {
+      return FALLBACK_COMPANY_LINKS;
+    }
+
+    return companyMenuItems.map((item) => ({
+      name: item.title,
+      href: item.url || "#",
+    }));
+  }, [companyMenuItems]);
 
   const features = [
     { icon: Truck, title: "Fast Delivery", desc: "Across Bangladesh" },
@@ -59,10 +147,13 @@ export default function Footer() {
           <div>
             <h4 className="text-gray-900 font-black text-sm uppercase tracking-widest mb-8">Company</h4>
             <ul className="space-y-4 text-sm font-bold">
-              <li><button className="text-gray-500 hover:text-emerald-600 transition-colors">Our Story</button></li>
-              <li><button className="text-gray-500 hover:text-emerald-600 transition-colors">Careers</button></li>
-              <li><button className="text-gray-500 hover:text-emerald-600 transition-colors">Press Office</button></li>
-              <li><button className="text-gray-500 hover:text-emerald-600 transition-colors">Sustainability</button></li>
+              {companyLinks.map((link, index) => (
+                <li key={`${link.name}-${index}`}>
+                  <Link to={link.href} className="text-gray-500 hover:text-emerald-600 transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -107,9 +198,15 @@ export default function Footer() {
         <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
           <p>{settings?.copyright_text}</p>
           <div className="flex gap-6">
-            <button className="hover:text-emerald-600 transition-colors">Privacy</button>
-            <button className="hover:text-emerald-600 transition-colors">Terms</button>
-            <button className="hover:text-emerald-600 transition-colors">Cookies</button>
+            {footerLinks.map((link, index) => (
+              <Link
+                key={`${link.name}-${index}`}
+                to={link.href}
+                className="hover:text-emerald-600 transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

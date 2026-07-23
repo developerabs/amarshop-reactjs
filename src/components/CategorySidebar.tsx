@@ -57,7 +57,7 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
                 className="relative"
               >
                 <button
-                  onClick={() => navigate(`/allproducts?category=${category.slug}`)}
+                  onClick={() => navigate(`/shop?category=${category.slug}`)}
                   className={`w-full flex items-center justify-between px-6 py-2.5 hover:bg-emerald-50 group transition-colors text-left  cursor-pointer ${activeCategory?.name === category.name ? 'bg-emerald-50' : ''}`}
                 >
                   <div className="flex items-center gap-3">
@@ -97,14 +97,14 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
         >
           {activeCategory.children.map((sub: any) => (
             <div key={sub.name} className="space-y-3">
-              <h3 onClick={() => navigate(`/allproducts?category=${sub.slug}`)} className="text-[11px] font-black text-gray-900 uppercase tracking-widest border-b border-gray-50 pb-2 cursor-pointer">
+              <h3 onClick={() => navigate(`/shop?category=${sub.slug}`)} className="text-[11px] font-black text-gray-900 uppercase tracking-widest border-b border-gray-50 pb-2 cursor-pointer">
                 {sub.name}
               </h3>
               <div className="flex flex-col gap-2">
                 {sub.children?.map((child: any) => (
                   <button 
                     key={typeof child === 'string' ? child : child?.id || child?.name}
-                    onClick={() => navigate(`/allproducts?category=${child.slug}`)}
+                    onClick={() => navigate(`/shop?category=${child.slug}`)}
                     className="text-[10px] font-medium text-gray-500 hover:text-emerald-600 transition-colors text-left cursor-pointer"
                   >
                     {typeof child === 'string' ? child : child?.name}
