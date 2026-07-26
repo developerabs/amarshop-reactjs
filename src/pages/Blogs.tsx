@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import api from "../services/api";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface BlogPost {
   id: number;
@@ -8,11 +9,12 @@ interface BlogPost {
   category: string;
   content: string;
   slug: string;
-  thumbnail: string;
+  thumbnail: string | null;
   created_at: string;
 }
 export default function Blogs() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -42,7 +44,7 @@ export default function Blogs() {
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {blogs.map((post) => (
             <article key={post.id} className="overflow-hidden rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <img src={post.thumbnail} alt={post.title} className="h-52 w-full object-cover" referrerPolicy="no-referrer" />
+              <img src={post.thumbnail ?? ""} alt={post.title} className="h-52 w-full object-cover" referrerPolicy="no-referrer" />
               <div className="p-6 space-y-3">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-gray-400 font-black">
                   <span>{post.category}</span>
@@ -50,7 +52,10 @@ export default function Blogs() {
                 </div>
                 <h2 className="text-lg font-black text-gray-900">{post.title}</h2>
                 <p className="text-sm text-gray-500 leading-relaxed">{post.content}</p>
-                <button className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700">
+                <button
+                  onClick={() => navigate(`/blogs/${post.slug}`)}
+                  className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700"
+                >
                   Read Article
                 </button>
               </div>

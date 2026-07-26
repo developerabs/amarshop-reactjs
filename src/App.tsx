@@ -26,6 +26,7 @@ const AllProducts = lazy(() => import("./pages/AllProducts"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
 const FlashDeal = lazy(() => import("./pages/FlashDeal"));
 const Blogs = lazy(() => import("./pages/Blogs"));
+const BlogDetails = lazy(() => import("./pages/BlogDetails"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Compare = lazy(() => import("./pages/Compare"));
 const SellerShop = lazy(() => import("./pages/SellerShop"));
@@ -91,6 +92,7 @@ function AppShell() {
           <Route path="/seller-shop" element={<SellerShop />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/blogs" element={<Blogs />} />
+          <Route path="/blogs/:slug" element={<BlogDetails />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/products" element={<AllProducts />} />
           <Route path="/login" element={<Login setIsProfileOpen={setIsProfileOpen} />} />

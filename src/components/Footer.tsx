@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, ShieldCheck, Truck, RotateCcw, Headphones } from "lucide-react";
+import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, ShieldCheck, Truck, RotateCcw, Headphones, Globe, type LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
 import api from "../services/api";
@@ -25,6 +25,21 @@ interface FooterLink {
   href: string;
 }
 
+interface SocialLinkItem {
+  id: number;
+  name: string;
+  url: string;
+  icon: string;
+  sort_order: number;
+}
+
+interface SocialLinksApiResponse {
+  success?: boolean;
+  data?: {
+    social_links?: SocialLinkItem[];
+  };
+}
+
 const FALLBACK_FOOTER_LINKS = [
   { name: "Privacy", href: "/privacy" },
   { name: "Terms", href: "/terms" },
@@ -42,6 +57,7 @@ export default function Footer() {
   const { settings } = useSettings();
   const [footerMenuItems, setFooterMenuItems] = useState<FooterMenuItem[]>([]);
   const [companyMenuItems, setCompanyMenuItems] = useState<FooterMenuItem[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>([]);
 
   useEffect(() => {
     const loadFooterMenus = async () => {
@@ -69,6 +85,35 @@ export default function Footer() {
     };
 
     loadCompanyMenus();
+  }, []);
+
+  useEffect(() => {
+    const loadSocialLinks = async () => {
+      const endpoints = ["/social-links", "/social/links", "/settings/social-links"];
+
+      try {
+        let loadedSocialLinks: SocialLinkItem[] = [];
+
+        for (const endpoint of endpoints) {
+          try {
+            const response = await api.get<SocialLinksApiResponse>(endpoint);
+            loadedSocialLinks = response.data?.data?.social_links ?? [];
+            if (loadedSocialLinks.length > 0) {
+              break;
+            }
+          } catch {
+            // Try next endpoint variant.
+          }
+        }
+
+        setSocialLinks([...loadedSocialLinks].sort((a, b) => a.sort_order - b.sort_order));
+      } catch (error) {
+        console.error("Failed to fetch social links:", error);
+        setSocialLinks([]);
+      }
+    };
+
+    loadSocialLinks();
   }, []);
 
   const footerLinks = useMemo(() => {
@@ -100,6 +145,15 @@ export default function Footer() {
     { icon: Headphones, title: "24/7 Support", desc: "Dedicated Team" },
   ];
 
+  const getSocialIcon = (iconValue: string, nameValue: string): LucideIcon => {
+    const value = `${iconValue} ${nameValue}`.toLowerCase();
+    if (value.includes("facebook")) return Facebook;
+    if (value.includes("instagram")) return Instagram;
+    if (value.includes("twitter") || value.includes("x.com") || value.includes("x ")) return Twitter;
+    if (value.includes("youtube")) return Youtube;
+    return Globe;
+  };
+
   return (
     <footer className="bg-white border-t border-gray-100 pt-[33px] pl-0 pb-[80px] mb-[2px]">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -130,16 +184,26 @@ export default function Footer() {
               </p>
             )}
             <div className="flex gap-3">
-              {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={['Facebook', 'Instagram', 'Twitter', 'YouTube'][i]}
-                  className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-                >
-                  <Icon className="w-5 h-5" />
-                </button>
-              ))}
+              {(socialLinks.length ? socialLinks : [
+                { id: 1, name: "Facebook", url: "#", icon: "facebook", sort_order: 1 },
+                { id: 2, name: "Instagram", url: "#", icon: "instagram", sort_order: 2 },
+                { id: 3, name: "Twitter", url: "#", icon: "twitter", sort_order: 3 },
+                { id: 4, name: "YouTube", url: "#", icon: "youtube", sort_order: 4 },
+              ]).map((social) => {
+                const Icon = getSocialIcon(social.icon, social.name);
+                return (
+                  <a
+                    key={social.id}
+                    href={social.url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.name}
+                    className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
