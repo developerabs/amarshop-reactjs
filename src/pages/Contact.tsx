@@ -36,7 +36,7 @@ export default function Contact() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 pt-20">
+    <main className="min-h-screen bg-gray-50 pb-20 pt-4">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-[2rem] bg-white shadow-xl border border-gray-100 overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">

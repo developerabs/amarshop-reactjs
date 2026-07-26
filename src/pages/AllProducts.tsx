@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ProductCard from "../components/ProductCard";
 import { Filter, SlidersHorizontal, ChevronDown, Grid, List, X } from "lucide-react";
 import SEO from "../components/SEO";
@@ -32,6 +32,42 @@ interface Brand {
   name: string;
   slug?: string;
 }
+
+interface ProductApiItem {
+  id: number;
+  name: string;
+  slug: string;
+  price: string;
+  sale_price: string;
+  total_stock: number;
+  images: string[];
+  category_name?: string;
+  discount_amount: string;
+  discount_type: string;
+  rating?: string | number;
+  reviews?: string | number;
+  thumbnail: string;
+}
+
+interface PaginationLink {
+  url: string | null;
+  label: string;
+  page: number | null;
+  active: boolean;
+}
+
+interface ProductsApiResponse {
+  success?: boolean;
+  data?: {
+    products?: {
+      current_page?: number;
+      data?: ProductApiItem[];
+      last_page?: number;
+      links?: PaginationLink[];
+      total?: number;
+    };
+  };
+}
 type Product = {
   id: string;
   name: string;
@@ -41,6 +77,7 @@ type Product = {
   category: string;
   images: string[];
   image: string;
+  thumbnail?: string;
   available: number;
   salePrice: number;
   discountAmount: number;
@@ -65,6 +102,23 @@ export default function AllProducts() {
   const [priceRange, setPriceRange] = useState<{label: string, min: number, max: number} | null>(null);
  
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [paginationLinks, setPaginationLinks] = useState<PaginationLink[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const filterSignature = useMemo(() => {
+    const categoryValue = selectedCategory ?? "all";
+    const categorySlugValue = selectedCategorySlug ?? "all";
+    const brandValue = selectedBrands.length ? selectedBrands.join(",") : "all";
+    const brandSlugValue = selectedBrandSlug ?? "all";
+    const priceValue = priceRange ? `${priceRange.min}-${priceRange.max}` : "all";
+
+    return [categoryValue, categorySlugValue, brandValue, brandSlugValue, priceValue, sortBy].join("|");
+  }, [selectedCategory, selectedCategorySlug, selectedBrands, selectedBrandSlug, priceRange, sortBy]);
+
+  const lastFilterSignatureRef = useRef(filterSignature);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -148,8 +202,17 @@ export default function AllProducts() {
 
   useEffect(() => {
     const fetchAllProducts = async () => {
+      const filterChanged = lastFilterSignatureRef.current !== filterSignature;
+      if (filterChanged && currentPage !== 1) {
+        lastFilterSignatureRef.current = filterSignature;
+        setCurrentPage(1);
+        return;
+      }
+
+      lastFilterSignatureRef.current = filterSignature;
+      setIsLoading(true);
       try {
-        const params: any = {};
+        const params: any = { page: currentPage };
 
         if (selectedCategory) {
             params.category_id = selectedCategory;
@@ -195,35 +258,26 @@ export default function AllProducts() {
                 break;
         }
         
-        const response = await api.get("/products/all-products", { params });
-        // console.log("Fetched products:", response);
+        const response = await api.get<ProductsApiResponse>("/products/all-products", { params });
         if (response.data.success) {
-          const featchProducts = response.data.data.products.data.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number; thumbnail: string; }) => ({
-            ...p,
-            id: String(p.id),
-            slug: p.slug,
-            name: p.name,
-            price: parseFloat(p.price),
-            salePrice: parseFloat(p.sale_price),
-            flashPrice: Math.floor(parseFloat(p.price) * 0.8),
-            category: p.category_name,
-            image: p.images?.[0] ?? '',
-            thumbnail: p.thumbnail,
-            available: p.total_stock,
-            discountAmount: parseFloat(p.discount_amount),
-            discountType: p.discount_type,
-            rating: typeof p.rating === 'string' ? parseFloat(p.rating) : (p.rating ?? 0),
-            reviews: typeof p.reviews === 'string' ? parseInt(String(p.reviews), 10) : (p.reviews ?? 0),
-          }));
-          setAllProducts(featchProducts);
+          const productsPayload = response.data.data?.products;
+          const mappedProducts = (productsPayload?.data ?? []).map(mapApiProductToProduct);
+
+          setAllProducts(mappedProducts);
+          setCurrentPage(productsPayload?.current_page ?? currentPage);
+          setLastPage(productsPayload?.last_page ?? 1);
+          setTotalProducts(productsPayload?.total ?? mappedProducts.length);
+          setPaginationLinks(productsPayload?.links ?? []);
         }
       } catch (error) {
         console.error("Failed to fetch all products:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchAllProducts();
-  }, [selectedCategory, selectedCategorySlug, selectedBrands, priceRange, sortBy]);
+  }, [currentPage, filterSignature, selectedCategory, selectedCategorySlug, selectedBrands, selectedBrandSlug, priceRange, sortBy]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -235,15 +289,52 @@ export default function AllProducts() {
     setSelectedBrands([]);
     setSelectedBrandSlug(null);
     setPriceRange(null);
+    setCurrentPage(1);
   };
 
+  const goToPage = (page: number | null) => {
+    if (!page || page < 1 || page > lastPage || page === currentPage) {
+      return;
+    }
+
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const mapApiProductToProduct = (product: ProductApiItem): Product => ({
+    id: String(product.id),
+    name: product.name,
+    slug: product.slug,
+    price: parseFloat(product.price),
+    salePrice: parseFloat(product.sale_price),
+    flashPrice: Math.floor(parseFloat(product.price) * 0.8),
+    category: product.category_name ?? "",
+    images: product.images ?? [],
+    image: product.images?.[0] ?? "",
+    thumbnail: product.thumbnail,
+    available: product.total_stock,
+    discountAmount: parseFloat(product.discount_amount),
+    discountType: product.discount_type,
+    rating: typeof product.rating === "string" ? parseFloat(product.rating) : (product.rating ?? 0),
+    reviews: typeof product.reviews === "string" ? parseInt(String(product.reviews), 10) : (product.reviews ?? 0),
+  });
+
+  useEffect(() => {
+    if (lastFilterSignatureRef.current !== filterSignature) {
+      lastFilterSignatureRef.current = filterSignature;
+
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      }
+    }
+  }, [currentPage, filterSignature]);
+
   return (
-    <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-28">
+    <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-4">
       <SEO 
         title="Explore Collection | AmarShop" 
         description="Browse our curated collection of premium fashion, electronics, and lifestyle products." 
       />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -252,7 +343,9 @@ export default function AllProducts() {
             <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight font-display italic">
               The <span className="text-emerald-600">Collection</span>
             </h1>
-            <p className="text-sm text-gray-500 font-medium">Discovering {allProducts.length} premium artifacts across Bangladesh.</p>
+            <p className="text-sm text-gray-500 font-medium">
+              Discovering {totalProducts || allProducts.length} premium artifacts across Bangladesh.
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -448,7 +541,7 @@ export default function AllProducts() {
                       onClick={() => setPriceRange(null)}
                       className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-orange-100"
                     >
-                      {priceRange.label}
+                          {priceRange?.label}
                       <X className="w-3 h-3" />
                     </motion.button>
                   )}
@@ -478,7 +571,53 @@ export default function AllProducts() {
               </div>
             ) : (
              <div className="flex flex-col items-center justify-center py-32 space-y-4">
-               
+               <p className="text-sm font-medium text-gray-500">
+                 {isLoading ? "Loading products..." : "No products found."}
+               </p>
+              </div>
+            )}
+
+            {paginationLinks.length > 0 && lastPage > 1 && (
+              <div className="mt-12 flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  <button
+                    onClick={() => goToPage(paginationLinks.find((link) => link.label.includes("Previous"))?.page ?? currentPage - 1)}
+                    disabled={!paginationLinks.some((link) => link.label.includes("Previous") && link.url)}
+                    className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-xs font-black uppercase tracking-widest text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:border-emerald-200 hover:text-emerald-600 transition-all"
+                  >
+                    Previous
+                  </button>
+
+                  {paginationLinks
+                    .filter((link) => !link.label.includes("Previous") && !link.label.includes("Next"))
+                    .map((link, index) => (
+                      <button
+                        key={`${link.label}-${index}`}
+                        onClick={() => goToPage(link.page)}
+                        disabled={!link.url}
+                        className={cn(
+                          "min-w-10 h-10 px-3 rounded-xl border text-xs font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed",
+                          link.active
+                            ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200"
+                            : "bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:text-emerald-600"
+                        )}
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+
+                  <button
+                    onClick={() => goToPage(paginationLinks.find((link) => link.label.includes("Next"))?.page ?? currentPage + 1)}
+                    disabled={!paginationLinks.some((link) => link.label.includes("Next") && link.url)}
+                    className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-xs font-black uppercase tracking-widest text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:border-emerald-200 hover:text-emerald-600 transition-all"
+                  >
+                    Next
+                  </button>
+                </div>
+
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                  Page {currentPage} of {lastPage}
+                </p>
               </div>
             )}
           </div>

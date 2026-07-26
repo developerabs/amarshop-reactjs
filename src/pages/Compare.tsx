@@ -52,7 +52,7 @@ export default function Compare() {
               Start adding products you love to compare their features and find the best fit for you.
             </p>
             <button 
-              onClick={() => navigate('/all-products')}
+              onClick={() => navigate('/shop')}
               className="inline-flex items-center justify-center rounded-2xl bg-gray-900 px-8 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-emerald-600 transition-all shadow-lg"
             >
               Browse Catalog
@@ -94,7 +94,7 @@ export default function Compare() {
                     {Array.from({ length: 4 - products.length }).map((_, i) => (
                       <th key={`empty-${i}`} className="p-8 w-1/5 border-b border-gray-50 bg-gray-50/20">
                         <button 
-                          onClick={() => navigate('/all-products')}
+                          onClick={() => navigate('/shop')}
                           className="w-full aspect-square rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-3 text-gray-300 hover:border-emerald-300 hover:text-emerald-500 transition-all bg-white/50 group"
                         >
                           <ArrowLeftRight className="w-8 h-8 group-hover:scale-110 transition-transform" />

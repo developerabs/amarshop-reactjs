@@ -70,7 +70,7 @@ export default function SearchResults() {
   }, [searchTerm]);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 pt-20">
+    <main className="min-h-screen bg-gray-50 pb-20 pt-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 pt-6">
           <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Search Results</h1>

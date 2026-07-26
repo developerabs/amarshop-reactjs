@@ -60,7 +60,7 @@ export default function BlogDetails() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 pt-24 pb-20">
+      <main className="min-h-screen bg-gray-50 pt-24 pb-4">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-white border border-gray-100 shadow-sm p-8 text-center text-gray-500">
             Loading article...
@@ -119,7 +119,7 @@ export default function BlogDetails() {
             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight mb-4">{blogPost.title}</h1>
 
             <div className="space-y-4 text-gray-700 leading-relaxed text-[15px] sm:text-base whitespace-pre-line">
-              {blogPost.content}
+              <div dangerouslySetInnerHTML={{ __html: blogPost.content }} />
             </div>
           </div>
         </div>

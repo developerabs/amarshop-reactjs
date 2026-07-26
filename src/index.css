@@ -7,6 +7,19 @@
 }
 
 :root {
+  --theme-primary: #16a34a;
+  --theme-primary-50: #f0fdf4;
+  --theme-primary-100: #dcfce7;
+  --theme-primary-200: #bbf7d0;
+  --theme-primary-300: #86efac;
+  --theme-primary-400: #4ade80;
+  --theme-primary-500: #22c55e;
+  --theme-primary-600: #16a34a;
+  --theme-primary-700: #15803d;
+  --theme-primary-800: #166534;
+  --theme-primary-900: #14532d;
+  --theme-secondary: #ffffff;
+
   /* Primary Brand Colors - Luxury Emerald & Gold */
   --color-primary-50: #f0fdf4;
   --color-primary-100: #dcfce7;
@@ -61,6 +74,7 @@
   
   body {
     @apply text-gray-900 antialiased bg-white;
+    background-color: var(--theme-secondary);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -119,9 +133,50 @@
 
 /* Custom Selection Color */
 ::selection {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #14532d;
+  background-color: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary-900);
 }
+
+/* Dynamic brand-color remap for existing emerald utility classes */
+.text-emerald-500 { color: var(--theme-primary-500) !important; }
+.text-emerald-600 { color: var(--theme-primary-600) !important; }
+.text-emerald-700 { color: var(--theme-primary-700) !important; }
+.text-emerald-900 { color: var(--theme-primary-900) !important; }
+
+/* Secondary color remap for common white surface classes */
+.bg-white { background-color: var(--theme-secondary) !important; }
+.bg-white\/70 { background-color: color-mix(in srgb, var(--theme-secondary) 70%, transparent) !important; }
+.bg-white\/80 { background-color: color-mix(in srgb, var(--theme-secondary) 80%, transparent) !important; }
+.bg-white\/90 { background-color: color-mix(in srgb, var(--theme-secondary) 90%, transparent) !important; }
+.from-white { --tw-gradient-from: var(--theme-secondary) var(--tw-gradient-from-position) !important; }
+.to-white { --tw-gradient-to: var(--theme-secondary) var(--tw-gradient-to-position) !important; }
+
+.hover\:text-emerald-600:hover { color: var(--theme-primary-600) !important; }
+.hover\:text-emerald-700:hover { color: var(--theme-primary-700) !important; }
+
+.bg-emerald-50 { background-color: var(--theme-primary-50) !important; }
+.bg-emerald-100 { background-color: var(--theme-primary-100) !important; }
+.bg-emerald-500 { background-color: var(--theme-primary-500) !important; }
+.bg-emerald-600 { background-color: var(--theme-primary-600) !important; }
+.bg-emerald-600\/90 { background-color: color-mix(in srgb, var(--theme-primary-600) 90%, transparent) !important; }
+
+.hover\:bg-emerald-50:hover { background-color: var(--theme-primary-50) !important; }
+.hover\:bg-emerald-600:hover { background-color: var(--theme-primary-600) !important; }
+.hover\:bg-emerald-700:hover { background-color: var(--theme-primary-700) !important; }
+
+.border-emerald-100 { border-color: var(--theme-primary-100) !important; }
+.border-emerald-200 { border-color: var(--theme-primary-200) !important; }
+.border-emerald-500 { border-color: var(--theme-primary-500) !important; }
+.border-emerald-100\/50 { border-color: color-mix(in srgb, var(--theme-primary-100) 50%, transparent) !important; }
+.hover\:border-emerald-500\/20:hover { border-color: color-mix(in srgb, var(--theme-primary-500) 20%, transparent) !important; }
+
+.from-emerald-50 { --tw-gradient-from: var(--theme-primary-50) var(--tw-gradient-from-position) !important; }
+.from-emerald-100 { --tw-gradient-from: var(--theme-primary-100) var(--tw-gradient-from-position) !important; }
+.via-emerald-50 { --tw-gradient-via: var(--theme-primary-50) var(--tw-gradient-via-position) !important; }
+.to-emerald-100 { --tw-gradient-to: var(--theme-primary-100) var(--tw-gradient-to-position) !important; }
+
+.selection\:bg-emerald-100::selection { background-color: var(--theme-primary-100) !important; }
+.selection\:text-emerald-900::selection { color: var(--theme-primary-900) !important; }
 
 .site-logo-header {
   min-width: 100px;

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { url } from "inspector/promises";
 
 interface Slide {
   id: number;
@@ -84,8 +85,8 @@ export default function HeroBanner() {
                 {slides[currentSlide].description}
               </p>
               <div className="pt-4 sm:pt-6 flex gap-4">
-                <button 
-                  onClick={() => navigate(slides[currentSlide].button_link)}
+                <button
+                  onClick={() => window.location.href = slides[currentSlide].button_link}
                   className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-900 rounded-full font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-xl active:scale-95 flex items-center gap-2 group/btn"
                 >
                   {slides[currentSlide].button_text}

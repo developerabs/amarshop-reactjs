@@ -215,7 +215,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
 
             {/* Search Bar - Desktop */}
             <div className="hidden md:flex flex-1 max-w-2xl relative">
-              <div className="flex items-center w-full bg-gray-50 border border-gray-100 rounded-xl overflow-hidden focus-within:ring-4 focus-within:ring-[#0056b3]/10 focus-within:border-[#0056b3]/30 transition-all shadow-sm">
+              <div className="flex items-center w-full bg-gray-50 border border-gray-100 rounded-xl overflow-hidden focus-within:ring-4 focus-within:ring-[var(--theme-primary-600)]/10 focus-within:border-[var(--theme-primary-600)]/30 transition-all shadow-sm">
                 {/* Custom Category Selector */}
                 <div className="relative">
                   <button
@@ -243,7 +243,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                             }}
                             className={cn(
                               "w-full text-left px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors",
-                              selectedCategory === cat ? "text-[#0056b3] bg-blue-50" : "text-gray-600 hover:bg-gray-50"
+                              selectedCategory === cat ? "text-emerald-600 bg-emerald-50" : "text-gray-600 hover:bg-gray-50"
                             )}
                           >
                             {cat}
@@ -277,7 +277,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                 <button 
                   onClick={handleSearch} 
                   aria-label="Search"
-                  className="bg-[#0056b3] text-white px-6 h-12 hover:bg-[#004494] transition-colors flex items-center gap-2 group"
+                  className="bg-emerald-600 text-white px-6 h-12 hover:bg-emerald-700 transition-colors flex items-center gap-2 group"
                 >
                   <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
                   <span className="hidden lg:inline text-[11px] font-black uppercase tracking-widest">Search</span>
@@ -306,7 +306,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                                   addToRecentSearches(product);
                                   navigate(`/product/${product.slug}`);
                                 }}
-                                className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#0056b3] transition-all w-auto content-center"
+                                className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[var(--theme-primary-600)] transition-all w-auto content-center"
                                 title={product.name}
                               >
                                 <img 
@@ -315,7 +315,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                                   className="w-full h-12 object-cover rounded"
                                 />
                                 <span className="text-[10px] font-semibold truncate w-16">{product.name}</span>
-                                <span className="text-[9px] text-[#0056b3] font-bold">{formatPrice(product.sale_price)}</span>
+                                <span className="text-[9px] text-emerald-600 font-bold">{formatPrice(product.sale_price)}</span>
                               </button>
                           ))}
                         </div>
@@ -332,7 +332,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                                   setIsSearchFocused(false);
                                   navigate(`/product/${product.slug}`);
                                 }}
-                                className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[#0056b3] transition-all w-auto"
+                                className="flex-shrink-0 flex flex-col gap-1 p-2 rounded-lg overflow-hidden bg-gray-100 hover:ring-2 hover:ring-[var(--theme-primary-600)] transition-all w-auto"
                                 title={product.name}
                               >
                                 <img 
@@ -341,7 +341,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                                   className="w-full h-12 object-cover rounded"
                                 />
                                 <span className="text-[10px] font-semibold truncate w-16">{product.name}</span>
-                                <span className="text-[9px] text-[#0056b3] font-bold">{formatPrice(product.sale_price)}</span>
+                                <span className="text-[9px] text-emerald-600 font-bold">{formatPrice(product.sale_price)}</span>
                               </button>
                             ))}
                           </div>
@@ -425,7 +425,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
           {/* Mobile Search Bar - Dedicated Row */}
           <div className="md:hidden pb-3">
             <div className="relative">
-              <div className="flex items-center bg-gray-50 border border-gray-100 rounded-xl overflow-hidden focus-within:ring-4 focus-within:ring-[#0056b3]/10 focus-within:border-[#0056b3]/30 transition-all shadow-sm">
+              <div className="flex items-center bg-gray-50 border border-gray-100 rounded-xl overflow-hidden focus-within:ring-4 focus-within:ring-[var(--theme-primary-600)]/10 focus-within:border-[var(--theme-primary-600)]/30 transition-all shadow-sm">
                 <div className="flex-1 relative flex items-center">
                   <Search className="absolute left-3 w-4 h-4 text-gray-400" />
                   <input
@@ -444,7 +444,7 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                     </button>
                   )}
                 </div>
-                <button onClick={handleSearch} className="bg-[#0056b3] text-white px-4 py-2.5 hover:bg-[#004494] transition-colors">
+                <button onClick={handleSearch} className="bg-emerald-600 text-white px-4 py-2.5 hover:bg-emerald-700 transition-colors">
                   <Search className="w-4 h-4" />
                 </button>
               </div>

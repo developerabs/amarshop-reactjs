@@ -140,9 +140,7 @@ export default function BlogSection() {
                       {post.title}
                     </h3>
 
-                    <p className="hidden sm:block text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed">
-                      {post.content}
-                    </p>
+                    <div dangerouslySetInnerHTML={{ __html: post.content }} />
 
                     <div className="mt-auto">
                       <button

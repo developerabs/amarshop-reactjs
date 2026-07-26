@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../context/NotificationContext";
 import {
   User, Package, Heart, MapPin, CreditCard, Settings, ShoppingBag,
-  ChevronRight, LogOut, ShieldCheck, Bell, ExternalLink
+  ChevronRight, LogOut, ShieldCheck, ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useCommerce } from "../context/CommerceContext";
 import SEO from "../components/SEO";
 import { cn, formatPrice } from "../lib/utils";
 import ProductCard from "../components/ProductCard";
-import { getProducts } from "../lib/dataService";
 import api from "../services/api";
 import { v4 as uuidv4 } from "uuid";
-import { setTimeout } from "timers/promises";
 
 let guestId: string = localStorage.getItem("guest_id") || '';
 
@@ -33,13 +32,114 @@ interface Order {
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "wishlist" | "addresses" | "payments" | "settings">("overview");
   const { wishlistCount } = useCommerce();
+const { addNotification } = useNotifications();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
   const accessToken = localStorage.getItem("access_token");
-  const authChecked = accessToken ? true : false;
   const commerce = useCommerce();
   const wishlistProducts = commerce.wishlist;
+  const [profileLoading,setProfileLoading]=useState(false);
+  const [passwordLoading,setPasswordLoading]=useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: dashboardData?.user?.name ?? "",
+    phone: dashboardData?.user?.phone ?? "",
+    address: dashboardData?.user?.address ?? "",
+    profile_image: null as File | null,
+  });
+  const [passwordForm, setPasswordForm] = useState({
+      current_password: "",
+      password: "",
+      password_confirmation: "",
+  });
+  const updateProfile = async (e: any) => {
+      e.preventDefault();
+
+      try {
+          setProfileLoading(true);
+
+          const formData = new FormData();
+
+          formData.append("name", profileForm.name);
+          formData.append("phone", profileForm.phone);
+          formData.append("address", profileForm.address);
+
+          if (profileForm.profile_image instanceof File) {
+              formData.append("profile_image", profileForm.profile_image);
+          }
+
+          const res = await api.post(
+              "/profile/update?_method=PUT",
+              formData,
+              {
+                  headers: {
+                      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                      "Content-Type": "multipart/form-data",
+                  },
+              }
+          );
+
+          addNotification({
+              type: "success",
+              title: "Profile Update",
+              message: res.data.message ?? "Profile updated successfully.",
+          });
+      } catch (err) {
+          addNotification({
+              type: "error",
+              title: "Profile Update",
+              message: err.response?.data?.message ?? "An error occurred while updating the profile.",
+          });
+      } finally {
+          setProfileLoading(false);
+      }
+  };
+
+  const changePassword = async(e:any)=>{
+
+      e.preventDefault();
+
+      try{
+
+          setPasswordLoading(true);
+
+          const res = await api.put(
+              "/profile/update-password",
+              passwordForm,
+              {
+                  headers:{
+                      Authorization:`Bearer ${localStorage.getItem("access_token")}`
+                  }
+              }
+          );
+
+          addNotification({
+              type: "success",
+              title: "Password Update",
+              message: res.data.message ?? "Password updated successfully.",
+          });
+
+          setPasswordForm({
+              current_password:"",
+              password:"",
+              password_confirmation:"",
+          });
+
+      }catch(error:any){
+          addNotification({
+              type: "error",
+              title: "Password Update",
+              message: error.response?.data?.message ?? "An error occurred while updating the password.",
+          });
+          console.log(error.response?.data);
+
+      }finally{
+
+          setPasswordLoading(false);
+
+      }
+
+  }
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -53,7 +153,17 @@ export default function Dashboard() {
     }
   }, [window.location.search]);
 
-  
+  useEffect(() => {
+      if (dashboardData?.user) {
+          setProfileForm({
+              name: dashboardData.user.name ?? "",
+              phone: dashboardData.user.phone ?? "",
+              address: dashboardData.user.address ?? "",
+              profile_image: null,
+          });
+      }
+  }, [dashboardData]);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -116,7 +226,7 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-28">
+    <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-4">
       <SEO title="User Dashboard | AmarShop" description="Manage your orders, wishlist, and account preferences." />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -140,7 +250,11 @@ export default function Dashboard() {
               <div className="flex flex-col items-center text-center mb-10">
                 <div className="relative mb-4 group">
                   <div className="w-24 h-24 rounded-4xl bg-emerald-100 flex items-center justify-center border-4 border-white shadow-xl">
-                    <User className="w-10 h-10 text-emerald-600" />
+                    {dashboardData?.user?.image ? (
+                      <img className="w-10 h-10 text-emerald-600" src={dashboardData?.user?.image} alt="Profile" />
+                    ) : (
+                      <User className="w-10 h-10 text-emerald-600" />
+                    )}
                   </div>
                   <button className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl shadow-lg border border-gray-50 text-gray-400 hover:text-emerald-600 transition-all opacity-0 group-hover:opacity-100">
                     <Settings className="w-4 h-4" />
@@ -240,7 +354,7 @@ export default function Dashboard() {
                                 </span>
                               </div>
                               <button 
-                                onClick={() => navigate(`/orders/${order.order_no}`)}
+                                onClick={() => navigate(`/orders/${order.order_number}`)}
                                 className="p-3 bg-gray-900 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-600"
                               >
                                 <ExternalLink className="w-4 h-4" />
@@ -332,8 +446,188 @@ export default function Dashboard() {
                            {activeTab === 'payments' && <CreditCard className="w-8 h-8 text-gray-300" />}
                            {activeTab === 'settings' && <Settings className="w-8 h-8 text-gray-300" />}
                         </div>
-                        <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">{activeTab} Section</h3>
-                        <p className="text-gray-400 text-sm max-w-xs mx-auto font-medium">This module is part of the high-fidelity enterprise portal and will be unlocked upon backend finalization.</p>
+                        <div className="grid lg:grid-cols-2 gap-8">
+
+                        {/* Profile */}
+
+                        <div className="bg-white rounded-3xl p-8 shadow border">
+
+                            <h2 className="text-xl font-black mb-6">
+                                Profile Information
+                            </h2>
+
+                            <form
+                                onSubmit={updateProfile}
+                                className="space-y-5"
+                            >
+                                <div>
+
+                                    <label className="block text-sm font-semibold text-gray-700 mb-3">Profile Image</label>
+
+                                    <div className="relative">
+                                        <input
+                                            className="w-full border-2 border-dashed border-gray-300 rounded-2xl p-6 mt-1 cursor-pointer hover:border-blue-400 transition-colors focus:outline-none focus:border-blue-500 shadow-sm hover:shadow-md"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e)=>
+                                                setProfileForm({
+                                                    ...profileForm,
+                                                    profile_image: e.target.files?.[0] ?? null
+                                                })
+                                            }
+                                        />
+                                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center rounded-2xl text-gray-400 text-sm">
+                                            Drop image here or click to select
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div>
+
+                                    <label>Name</label>
+
+                                    <input
+                                        className="w-full border rounded-xl p-3 mt-1"
+                                        value={profileForm.name}
+                                        onChange={(e)=>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                name:e.target.value
+                                            })
+                                        }
+                                    />
+
+                                </div>
+
+                                <div>
+
+                                    <label>Phone</label>
+
+                                    <input
+                                        className="w-full border rounded-xl p-3 mt-1"
+                                        value={profileForm.phone}
+                                        onChange={(e)=>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                phone:e.target.value
+                                            })
+                                        }
+                                    />
+
+                                </div>
+                                <div>
+
+                                    <label>Address</label>
+
+                                    <input
+                                        className="w-full border rounded-xl p-3 mt-1"
+                                        value={profileForm.address}
+                                        onChange={(e)=>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                address:e.target.value
+                                            })
+                                        }
+                                    />
+
+                                </div>
+
+                                <button
+                                    disabled={profileLoading}
+                                    className="w-full bg-emerald-600 text-white rounded-xl py-3 font-bold"
+                                >
+                                    {profileLoading
+                                        ? "Updating..."
+                                        : "Update Profile"}
+                                </button>
+
+                            </form>
+
+                        </div>
+
+
+
+                        {/* Password */}
+
+                        <div className="bg-white rounded-3xl p-8 shadow border">
+
+                            <h2 className="text-xl font-black mb-6">
+                                Change Password
+                            </h2>
+
+                            <form
+                                onSubmit={changePassword}
+                                className="space-y-5"
+                            >
+
+                                <div>
+
+                                    <label>Current Password</label>
+
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-xl p-3 mt-1"
+                                        value={passwordForm.current_password}
+                                        onChange={(e)=>
+                                            setPasswordForm({
+                                                ...passwordForm,
+                                                current_password:e.target.value
+                                            })
+                                        }
+                                    />
+
+                                </div>
+
+                                <div>
+
+                                    <label>New Password</label>
+
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-xl p-3 mt-1"
+                                        value={passwordForm.password}
+                                        onChange={(e)=>
+                                            setPasswordForm({
+                                                ...passwordForm,
+                                                password:e.target.value
+                                            })
+                                        }
+                                    />
+
+                                </div>
+
+                                <div>
+
+                                    <label>Confirm Password</label>
+
+                                    <input
+                                        type="password"
+                                        className="w-full border rounded-xl p-3 mt-1"
+                                        value={passwordForm.password_confirmation}
+                                        onChange={(e)=>
+                                            setPasswordForm({
+                                                ...passwordForm,
+                                                password_confirmation:e.target.value
+                                            })
+                                        }
+                                    />
+
+                                </div>
+
+                                <button
+                                    disabled={passwordLoading}
+                                    className="w-full bg-gray-900 text-white rounded-xl py-3 font-bold"
+                                >
+                                    {passwordLoading
+                                        ? "Updating..."
+                                        : "Change Password"}
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
                       </div>
                    </div>
                 )}

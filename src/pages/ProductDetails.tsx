@@ -83,6 +83,19 @@ type RelatedProduct = {
   reviews: number;
 };
 
+type ApprovedReview = {
+  id: number;
+  rating: number;
+  review: string;
+  user_name: string;
+  created_at: string;
+};
+
+type ReviewSummary = {
+  total_reviews: number;
+  average_rating: number;
+};
+
 const buildFallbackProduct = (identifier: string | undefined): ApiProduct | null => {
   if (!identifier) return null;
 
@@ -130,6 +143,16 @@ export default function ProductDetails() {
   const [activeTab, setActiveTab] = useState("description");
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
+  const [approvedReviews, setApprovedReviews] = useState<ApprovedReview[]>([]);
+  const [reviewSummary, setReviewSummary] = useState<ReviewSummary>({
+    total_reviews: 0,
+    average_rating: 0,
+  });
 
   useEffect(() => {
     if (!productName) {
@@ -177,6 +200,24 @@ export default function ProductDetails() {
 
         const attributes = data?.data?.attributes ?? rawProduct?.attributes;
         const variantSource = data?.data?.variants ?? rawProduct?.variants;
+        const approvedReviewSource = data?.data?.approved_reviews;
+        const summarySource = data?.data?.review_summary;
+
+        const normalizedApprovedReviews: ApprovedReview[] = Array.isArray(approvedReviewSource)
+          ? approvedReviewSource.map((entry: any) => ({
+              id: Number(entry?.id ?? 0),
+              rating: Number(entry?.rating ?? 0),
+              review: String(entry?.review ?? ""),
+              user_name: String(entry?.user_name ?? "Anonymous"),
+              created_at: String(entry?.created_at ?? ""),
+            }))
+          : [];
+
+        setApprovedReviews(normalizedApprovedReviews);
+        setReviewSummary({
+          total_reviews: Number(summarySource?.total_reviews ?? normalizedApprovedReviews.length ?? 0),
+          average_rating: Number(summarySource?.average_rating ?? 0),
+        });
 
         const normalizedVariants = Array.isArray(variantSource)
           ? variantSource.map((variant: any) => {
@@ -237,10 +278,14 @@ export default function ProductDetails() {
         if (fallbackProduct) {
           setProduct(fallbackProduct);
           setError(null);
+          setApprovedReviews([]);
+          setReviewSummary({ total_reviews: 0, average_rating: 0 });
         } else {
           console.error("Error fetching product details for:", productName);
           setError("Unable to fetch product details.");
           setProduct(null);
+          setApprovedReviews([]);
+          setReviewSummary({ total_reviews: 0, average_rating: 0 });
         }
       })
       .finally(() => setLoading(false));
@@ -251,7 +296,7 @@ export default function ProductDetails() {
       try {
         const response = await api.get(`/products/related-products/${product.id}`);
         if (response.data.success) {
-          const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; rating?: string | number; reviews?: string | number; thumbnail?: string }) => ({
+        const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; review_summary: { average_rating: string | number; total_reviews: string | number }; thumbnail?: string }) => ({
             ...p,
             id: String(p.id),
             slug: p.slug,
@@ -265,8 +310,8 @@ export default function ProductDetails() {
             available: p.total_stock,
             discountAmount: parseFloat(p.discount_amount),
             discountType: p.discount_type,
-            rating: typeof p.rating === 'string' ? parseFloat(p.rating) : (p.rating ?? 0),
-            reviews: typeof p.reviews === 'string' ? parseInt(String(p.reviews), 10) : (p.reviews ?? 0),
+            rating: typeof p.review_summary.average_rating === 'string' ? parseFloat(p.review_summary.average_rating) : (p.review_summary.average_rating ?? 0),
+            reviews: typeof p.review_summary.total_reviews === 'string' ? parseInt(p.review_summary.total_reviews, 10) : (p.review_summary.total_reviews ?? 0),
           }));
           setRelatedProducts(deals);
         }
@@ -361,6 +406,59 @@ export default function ProductDetails() {
       `Hi AmarShop, I'm interested in the ${product.name} (Ref: ${product.id}). Can I get more details?`
     );
     window.open(`https://wa.me/${settings?.site_phone ?? ''}?text=${message}`, "_blank");
+  };
+
+  const handleSubmitReview = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!product) return;
+
+    const review = reviewText.trim();
+    if (!review) {
+      setReviewError("Please write your review before submitting.");
+      setReviewSuccess(null);
+      return;
+    }
+
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token");
+    if (!token) {
+      setReviewError("Please log in first to submit a review.");
+      setReviewSuccess(null);
+      return;
+    }
+
+    setIsReviewSubmitting(true);
+    setReviewError(null);
+    setReviewSuccess(null);
+
+    try {
+      const payload = {
+        product_id: product.id,
+        rating: reviewRating,
+        review,
+      };
+
+      const response = await api.post("/product-reviews/submit", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data?.success) {
+        setReviewSuccess(response.data?.message || "Your review was submitted successfully.");
+        setReviewText("");
+        setReviewRating(5);
+      } else {
+        setReviewError(response.data?.message || "Failed to submit review.");
+      }
+    } catch (error: any) {
+      const apiMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.errors?.review?.[0] ||
+        "Unable to submit your review right now.";
+      setReviewError(apiMessage);
+    } finally {
+      setIsReviewSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -498,10 +596,7 @@ export default function ProductDetails() {
                   </span>
                 )}
               </div>
-
-              <p className="text-sm text-gray-500 leading-relaxed max-w-xl font-medium italic border-l-4 border-emerald-500 pl-4 bg-gray-50 py-4 rounded-r-2xl">
-                {shortDescription}
-              </p>
+              <div dangerouslySetInnerHTML={{ __html: shortDescription }} />
 
               {/* Selection Grids */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -602,6 +697,7 @@ export default function ProductDetails() {
               { id: 'description', label: 'Details', icon: FileText },
               { id: 'specification', label: 'Specs', icon: Info },
               { id: 'variants', label: `Variants (${product.variants?.length ?? 0})`, icon: Star },
+              { id: 'reviews', label: 'Reviews', icon: MessageCircle },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -624,15 +720,12 @@ export default function ProductDetails() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl"
+                className="max-w-12xl"
               >
                 {activeTab === 'description' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <div className="space-y-6">
-                      <h3 className="text-2xl font-black text-gray-900 font-display">Product Narrative</h3>
-                      <p className="text-gray-500 leading-relaxed text-lg font-medium">
-                        {productDescription}
-                      </p>
+                      <div dangerouslySetInnerHTML={{ __html: productDescription }} />
                     </div>
                     {productDetailsImage && (
                     <div className="rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
@@ -672,6 +765,147 @@ export default function ProductDetails() {
                     ) : (
                       <p className="text-gray-500 text-sm">No variants available for this product.</p>
                     )}
+                  </div>
+                )}
+
+                {activeTab === 'reviews' && (
+                  <div className="max-w-2xl space-y-6">
+                    <h3 className="text-2xl font-black text-gray-900 font-display">Ratings and Reviews</h3>
+
+                    <div className="rounded-3xl border border-gray-100 bg-white p-6 sm:p-8 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Average Rating</p>
+                          <p className="text-3xl font-black text-gray-900">
+                            {reviewSummary.average_rating.toFixed(1)}
+                            <span className="text-base text-gray-400"> / 5</span>
+                          </p>
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                          {reviewSummary.total_reviews} review{reviewSummary.total_reviews === 1 ? '' : 's'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((starValue) => (
+                          <Star
+                            key={starValue}
+                            className={cn(
+                              "h-5 w-5",
+                              starValue <= Math.round(reviewSummary.average_rating)
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-gray-300"
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {approvedReviews.length > 0 ? (
+                        approvedReviews.map((item) => (
+                          <div key={item.id} className="rounded-2xl border border-gray-100 bg-white p-5 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <p className="text-sm font-black text-gray-900">{item.user_name}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{item.created_at}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((starValue) => (
+                                <Star
+                                  key={`${item.id}-${starValue}`}
+                                  className={cn(
+                                    "h-4 w-4",
+                                    starValue <= item.rating
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "text-gray-300"
+                                  )}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-sm text-gray-600 leading-relaxed">{item.review}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="rounded-2xl border border-gray-100 bg-white px-5 py-4 text-sm text-gray-500">
+                          No approved reviews yet for this product.
+                        </p>
+                      )}
+                    </div>
+
+                    <h4 className="text-xl font-black text-gray-900 font-display pt-2">Write A Review</h4>
+
+                    <form onSubmit={handleSubmitReview} className="space-y-5 rounded-3xl border border-gray-100 bg-gray-50 p-6 sm:p-8">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                          Rating
+                        </label>
+                        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-3">
+                          {[1, 2, 3, 4, 5].map((starValue) => (
+                            <button
+                              key={starValue}
+                              type="button"
+                              onClick={() => setReviewRating(starValue)}
+                              aria-label={`Rate ${starValue} star${starValue > 1 ? 's' : ''}`}
+                              className="group rounded-md p-1 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                            >
+                              <Star
+                                className={cn(
+                                  "h-7 w-7 transition-colors",
+                                  starValue <= reviewRating
+                                    ? "fill-amber-400 text-amber-400"
+                                    : "text-gray-300 group-hover:text-amber-300"
+                                )}
+                              />
+                            </button>
+                          ))}
+                          <span className="ml-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+                            {reviewRating} / 5
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label htmlFor="review-message" className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                          Review
+                        </label>
+                        <textarea
+                          id="review-message"
+                          value={reviewText}
+                          onChange={(e) => setReviewText(e.target.value)}
+                          rows={5}
+                          placeholder="Share your experience with this product..."
+                          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500"
+                        />
+                      </div>
+
+                      {reviewError && (
+                        <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+                          {reviewError}
+                        </p>
+                      )}
+
+                      {reviewSuccess && (
+                        <p className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+                          {reviewSuccess}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="submit"
+                          disabled={isReviewSubmitting}
+                          className="px-6 py-3 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                        >
+                          {isReviewSubmitting ? "Submitting..." : "Submit Review"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/login')}
+                          className="px-6 py-3 rounded-xl border border-gray-200 bg-white text-xs font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:border-emerald-200 transition-all"
+                        >
+                          Login
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 )}
               </motion.div>

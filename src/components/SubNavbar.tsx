@@ -68,7 +68,7 @@ export default function SubNavbar({ onCategoriesClick }: { onCategoriesClick?: (
           <div className="w-64 flex-shrink-0">
             <button
               onClick={onCategoriesClick}
-              className="flex items-center gap-3 px-6 h-12 w-full font-black text-[11px] uppercase tracking-widest transition-all bg-[#0056b3] text-white hover:bg-[#004494]"
+              className="flex items-center gap-3 px-6 h-12 w-full font-black text-[11px] uppercase tracking-widest transition-all bg-emerald-600 text-white hover:bg-emerald-700"
             >
               <Menu className="w-4 h-4" />
               ALL CATEGORIES
@@ -81,7 +81,7 @@ export default function SubNavbar({ onCategoriesClick }: { onCategoriesClick?: (
               <Link
                 key={`${link.name}-${index}`}
                 to={link.href}
-                className="text-[10px] lg:text-[11px] font-bold text-gray-700 uppercase tracking-wider hover:text-[#0056b3] transition-colors whitespace-nowrap"
+                className="text-[10px] lg:text-[11px] font-bold text-gray-700 uppercase tracking-wider hover:text-emerald-600 transition-colors whitespace-nowrap"
               >
                 {link.name}
               </Link>

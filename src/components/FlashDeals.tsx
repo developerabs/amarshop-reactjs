@@ -92,7 +92,7 @@ export default function FlashDeals() {
             </h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <p className="text-sm font-bold text-gray-500 uppercase tracking-widest hidden sm:block">Ends in:</p>
             <div className="flex gap-2 sm:gap-3">
               {[
@@ -110,7 +110,7 @@ export default function FlashDeals() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
@@ -182,7 +182,7 @@ export default function FlashDeals() {
           ))}
           
           {/* View All Card - Styled as a companion grid item */}
-          <div className="bg-emerald-50/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center border-2 border-dashed border-emerald-100 hover:bg-emerald-50 transition-colors group cursor-pointer" onClick={() => navigate('/all-products')}>
+          <div className="bg-emerald-50/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center border-2 border-dashed border-emerald-100 hover:bg-emerald-50 transition-colors group cursor-pointer" onClick={() => navigate('/flash-deal')}>
             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500 shadow-xl mb-4">
               <ChevronRight className="w-8 h-8" />
             </div>
