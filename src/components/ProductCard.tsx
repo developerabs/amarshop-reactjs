@@ -4,6 +4,7 @@ import { formatPrice, slugify } from "../lib/utils";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useCommerce } from "../context/CommerceContext";
+import { useSettings } from "../context/SettingsContext";
 import { useNotifications } from "../context/NotificationContext";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { cn } from "../lib/utils";
@@ -20,7 +21,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
   const navigate = useNavigate();
   const commerce = useCommerce();
   const { addNotification } = useNotifications();
-  
+  const { settings } = useSettings();
   const wishlisted = typeof isWishlisted === "boolean" ? isWishlisted : commerce.isInWishlist(Number(product.id));
   const compared = commerce.isInCompare(Number(product.id));
   
@@ -59,7 +60,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
   const handleInquire = (e: MouseEvent) => {
     e.stopPropagation();
     const message = encodeURIComponent(`Hi AmarShop, I'm interested in ${product.name} (${product.id}). Can you provide more details?`);
-    window.open(`https://wa.me/8801700000000?text=${message}`, '_blank');
+    window.open(`https://wa.me/${settings?.site_phone}?text=${message}`, '_blank');
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

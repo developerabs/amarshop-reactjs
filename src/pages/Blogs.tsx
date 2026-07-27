@@ -51,7 +51,12 @@ export default function Blogs() {
                   <span>{new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
                 <h2 className="text-lg font-black text-gray-900">{post.title}</h2>
-                <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      post.content.replace(/<[^>]+>/g, "").slice(0, 150) + "...",
+                  }}
+                />
                 <button
                   onClick={() => navigate(`/blogs/${post.slug}`)}
                   className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700"

@@ -163,7 +163,7 @@ export default function FlashDeals() {
                 </div>
 
                 {/* Stock Progress Bar */}
-                <div className="space-y-2 pt-2 border-t border-gray-100">
+                {/* <div className="space-y-2 pt-2 border-t border-gray-100">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                     <span className="text-gray-400">Available: <span className="text-gray-900">12</span></span>
                     <span className="text-gray-400">Sold: <span className="text-emerald-600">48</span></span>
@@ -176,7 +176,7 @@ export default function FlashDeals() {
                       className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400"
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
             </motion.div>
           ))}

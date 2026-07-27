@@ -140,7 +140,12 @@ export default function BlogSection() {
                       {post.title}
                     </h3>
 
-                    <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          post.content.replace(/<[^>]+>/g, "").slice(0, 150) + "...",
+                      }}
+                    />
 
                     <div className="mt-auto">
                       <button

@@ -31,6 +31,7 @@ type ProductVariant = {
   id: number;
   name: string;
   price: string;
+  additional_price?: string | number | null;
   cost: string;
   stock: number;
   image: string | null;
@@ -364,9 +365,9 @@ export default function ProductDetails() {
     );
   });
 
-  const displayedPrice = selectedVariant
-    ? Number(selectedVariant.price)
-    : Number(product?.sale_price ?? 0);
+  const baseSalePrice = Number(product?.sale_price ?? 0);
+  const selectedVariantAdditional = selectedVariant ? Number(selectedVariant.additional_price ?? selectedVariant.price ?? 0) : 0;
+  const displayedPrice = baseSalePrice + selectedVariantAdditional;
   const displayedAdditionalPrice = Number(product?.price ?? 0);
   const stockCount = selectedVariant?.stock ?? product?.total_stock ?? 0;
   const stockLabel = stockCount > 0 ? `${stockCount} in stock` : "Out of stock";
@@ -544,7 +545,7 @@ export default function ProductDetails() {
             </div>
 
             {/* Thumbnails */}
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+            <div className="gap-4 overflow-x-auto no-scrollbar pb-2">
               {images.map((img, i) => (
                 <button
                   key={i}

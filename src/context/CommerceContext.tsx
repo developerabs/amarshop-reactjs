@@ -153,17 +153,19 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      // Calculate variant price
-      let variantPrice = product.sale_price || product.price;
+      // Variant total price = base sale price + variant additional price
+      const basePrice = Number(product.sale_price ?? product.price ?? 0);
+      let variantPrice = basePrice;
       let variationName = "";
 
       if (normalizedVariantId && product.variants) {
         const variant = product.variants.find(
           (v: any) => v.id?.toString() === normalizedVariantId
-        );
+        ) as any;
 
         if (variant) {
-          variantPrice = variant.price;
+          const additionalPrice = Number(variant.additional_price ?? variant.price ?? 0);
+          variantPrice = basePrice + additionalPrice;
           variationName = variant.name;
         }
       }
@@ -171,10 +173,7 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       // Create new cart item
       const cartItem: CartItem = {
         ...product,
-        price:
-          typeof variantPrice === "string"
-            ? parseFloat(variantPrice)
-            : variantPrice,
+        price: Number.isFinite(variantPrice) ? variantPrice : 0,
         quantity,
         variationId: normalizedVariantId,
         variation: variationName,

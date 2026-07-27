@@ -168,14 +168,10 @@ export default function CartDrawer({
             {/* Footer / Summary */}
             <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-3">
               <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-bold text-gray-500">
+                {/* <div className="flex justify-between text-xs font-bold text-gray-500">
                   <span>Subtotal</span>
                   <span>৳{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs font-bold text-gray-500">
-                  <span>Shipping</span>
-                  <span className="text-emerald-600 uppercase text-[9px] tracking-widest font-black">Free</span>
-                </div>
+                </div> */}
                 <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
                   <span className="text-sm font-black text-gray-900 uppercase tracking-tight">Total</span>
                   <span className="text-lg font-black text-emerald-600">৳{subtotal.toLocaleString()}</span>
