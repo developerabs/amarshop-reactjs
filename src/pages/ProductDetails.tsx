@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { useSettings } from "../context/SettingsContext";
+import useEmblaCarousel from "embla-carousel-react";
 import {
   Star,
   ShoppingCart,
@@ -36,7 +37,10 @@ type ProductVariant = {
   image: string | null;
   attributes: Record<string, string>;
 };
-
+type ProductSpecification = {
+  key: string;
+  value: string;
+};
 type ApiProduct = {
   id: number;
   code: string;
@@ -64,6 +68,7 @@ type ApiProduct = {
   variants?: ProductVariant[];
   attributes?: Record<string, string[]>;
   details_image: string | null;
+  specifications?: ProductSpecification[];
 };
 type RelatedProduct = {
   id: string;
@@ -127,6 +132,12 @@ export default function ProductDetails() {
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary>({
     total_reviews: 0,
     average_rating: 0,
+  });
+  const [emblaRef] = useEmblaCarousel({
+    dragFree: true,
+    containScroll: "trimSnaps",
+    align: "start",
+
   });
 
   useEffect(() => {
@@ -271,7 +282,7 @@ export default function ProductDetails() {
       try {
         const response = await api.get(`/products/related-products/${product.id}`);
         if (response.data.success) {
-        const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; review_summary: { average_rating: string | number; total_reviews: string | number }; thumbnail?: string }) => ({
+        const deals = response.data.data.products.map((p: { id: number; name: string; slug: string; price: string; sale_price: string; total_stock: number; images: string[]; category_name?: string; discount_amount: string; discount_type: string; review_summary: { average_rating: string | number; total_reviews: string | number }; thumbnail?: string; rating: string | number; reviews: string | number }) => ({
             ...p,
             id: String(p.id),
             slug: p.slug,
@@ -285,9 +296,10 @@ export default function ProductDetails() {
             available: p.total_stock,
             discountAmount: parseFloat(p.discount_amount),
             discountType: p.discount_type,
-            rating: typeof p.review_summary.average_rating === 'string' ? parseFloat(p.review_summary.average_rating) : (p.review_summary.average_rating ?? 0),
-            reviews: typeof p.review_summary.total_reviews === 'string' ? parseInt(p.review_summary.total_reviews, 10) : (p.review_summary.total_reviews ?? 0),
+            rating: typeof p.rating === "string" ? parseFloat(p.rating) : (p.rating ?? 0),
+            reviews: typeof p.reviews === "string" ? parseInt(String(p.reviews), 10) : (p.reviews ?? 0),
           }));
+          console.log('Related products fetched:', deals);
           setRelatedProducts(deals);
         }
       } catch (error) {
@@ -520,16 +532,26 @@ export default function ProductDetails() {
             </div>
 
             {/* Thumbnails */}
-            <div className="gap-4 overflow-x-auto no-scrollbar pb-2">
-              {images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveImageIndex(i)}
-                  className={`w-20 h-24 sm:w-24 sm:h-28 rounded-3xl border-2 overflow-hidden flex-shrink-0 transition-all duration-500 ${activeImageIndex === i ? 'border-emerald-500 scale-95 shadow-lg' : 'border-gray-50 opacity-60 grayscale hover:grayscale-0 hover:opacity-100'}`}
-                >
-                  <img src={img} alt="Preview" className="w-full h-full object-cover" />
-                </button>
-              ))}
+            <div className="overflow-hidden mt-5" ref={emblaRef}>
+              <div className="flex gap-3">
+                {images.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveImageIndex(index)}
+                    className={`flex-[0_0_80px] h-24 rounded-2xl overflow-hidden border-2 transition
+                    ${
+                      activeImageIndex === index
+                        ? "border-emerald-500"
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -713,19 +735,16 @@ export default function ProductDetails() {
 
                 {activeTab === 'specification' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      { label: 'Product Model', value: modelNumber || 'N/A' },
-                      { label: 'Category', value: categoryName },
-                      { label: 'Brand', value: brandName ?? 'Unbranded' },
-                      { label: 'Stock', value: stockLabel },
-                      { label: 'Variants', value: `${product.variants?.length ?? 0}` },
-                      { label: 'Availability', value: product.total_stock > 0 ? 'Ready Stock' : 'Out of Stock' },
-                    ].map((spec, i) => (
+                    {product.specifications && product.specifications.length > 0 ? (
+                      product.specifications.map((spec, i) => (
                       <div key={i} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl group hover:bg-emerald-50 transition-colors">
-                        <span className="font-bold text-gray-400 uppercase text-[10px] tracking-widest">{spec.label}</span>
+                        <span className="font-bold text-gray-400 uppercase text-[10px] tracking-widest">{spec.key}</span>
                         <span className="font-black text-gray-900 text-sm">{spec.value}</span>
                       </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">No specifications available for this product.</p>
+                    )}
                   </div>
                 )}
                 {activeTab === 'variants' && (

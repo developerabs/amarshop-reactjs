@@ -138,13 +138,13 @@ export default function BlogSection() {
                     </div>
 
                     <h3 onClick={() => navigate(`/blogs/${post.slug}`)} className="text-xs sm:text-lg font-black text-gray-900 mb-1 sm:mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2 leading-tight cursor-pointer">
-                      {post.title}
+                      {post.content.replace(/<[^>]+>/g, "").slice(0, 30) + "..."}
                     </h3>
 
                     <div
                       dangerouslySetInnerHTML={{
                         __html:
-                          post.content.replace(/<[^>]+>/g, "").slice(0, 150) + "...",
+                          post.content.replace(/<[^>]+>/g, "").slice(0, 80) + "...",
                       }}
                     />
 
