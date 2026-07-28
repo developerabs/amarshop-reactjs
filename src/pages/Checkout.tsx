@@ -36,6 +36,7 @@ interface CheckoutForm {
   guest_id: string;
   discountCode?: string;
   shippingId?: string;
+  agreeToTerms: boolean;
 }
 
 export default function Checkout() {
@@ -109,7 +110,8 @@ export default function Checkout() {
     paymentMethod: 'cod',
     saveInfo: false,
     guest_id: guestId,
-    shippingId: selectedShippingId
+    shippingId: selectedShippingId,
+    agreeToTerms: true,
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -118,11 +120,11 @@ export default function Checkout() {
     window.scrollTo(0, 0);
   }, [currentStep]);
 
-  useEffect(() => {
-    if (cartItems.length === 0 && !isSuccess) {
-      navigate('/');
-    }
-  }, [cartItems, navigate, isSuccess]);
+  // useEffect(() => {
+  //   if (cartItems.length === 0 && !isSuccess) {
+  //     navigate('/');
+  //   }
+  // }, [cartItems, navigate, isSuccess]);
   useEffect(() => {
     const fetchShippingOptions = async () => {
       try {
@@ -163,6 +165,7 @@ export default function Checkout() {
         })),
         guest_id: formData.guest_id,
         shipping_id: selectedShippingId || null,
+        agree_to_terms: formData.agreeToTerms,
       };
 
       const response = await api.post('/checkout/place-order', payload , {
@@ -257,7 +260,7 @@ export default function Checkout() {
     <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-4">
       <SEO title="Checkout | AmarShop" description="Complete your purchase with secure checkout." />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-2">
             <button 
@@ -341,7 +344,7 @@ export default function Checkout() {
                     
                     <div className="pt-6 border-t border-gray-100">
                       <label className="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" className="mt-1 w-4 h-4 rounded-lg text-emerald-600 focus:ring-emerald-500/20" />
+                        <input type="checkbox" className="mt-1 w-4 h-4 rounded-lg text-emerald-600 focus:ring-emerald-500/20" checked={formData.agreeToTerms} onChange={() => handleInputChange('agreeToTerms', !formData.agreeToTerms)} />
                         <span className="text-xs text-gray-500 font-medium leading-relaxed">
                           I agree to AmarShop's <a href="/terms" className="text-emerald-600 font-black underline">Terms of Service</a> and confirm that the shipping details provided are accurate for prompt delivery.
                         </span>

@@ -52,7 +52,7 @@ export default function BlogSection() {
 
   return (
     <section className="py-4 sm:py-6 bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter uppercase">
             <span className="text-emerald-600">Blog</span>
@@ -115,10 +115,11 @@ export default function BlogSection() {
                 >
                   <div className="relative h-32 sm:h-48 overflow-hidden">
                     <img
+                      onClick={() => navigate(`/blogs/${post.slug}`)}
                       src={post.thumbnail ?? ""}
                       alt={post.title}
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 cursor-pointer"
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
@@ -136,7 +137,7 @@ export default function BlogSection() {
                       </div>
                     </div>
 
-                    <h3 className="text-xs sm:text-lg font-black text-gray-900 mb-1 sm:mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2 leading-tight">
+                    <h3 onClick={() => navigate(`/blogs/${post.slug}`)} className="text-xs sm:text-lg font-black text-gray-900 mb-1 sm:mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2 leading-tight cursor-pointer">
                       {post.title}
                     </h3>
 
@@ -150,7 +151,7 @@ export default function BlogSection() {
                     <div className="mt-auto">
                       <button
                         onClick={() => navigate(`/blogs/${post.slug}`)}
-                        className="text-[9px] sm:text-[11px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 group/btn"
+                        className="text-[9px] sm:text-[11px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 group/btn cursor-pointer"
                       >
                         Read More
                         <ChevronRight className="w-2.5 h-2.5 sm:w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />

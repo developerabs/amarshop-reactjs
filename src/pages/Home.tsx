@@ -43,7 +43,7 @@ export default function Home({ onCategorySeeMore, onAddToCart }: HomeProps) {
         description="Experience the finest selection of jewelry, traditional attire, and electronics at AmarShop. Shop our latest Eid Collection 2026."
       />
       {/* Hero Section with Sidebar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="flex gap-6">
           <CategorySidebar onViewAll={onCategorySeeMore} />
           <div className="flex-1 min-w-0">
@@ -56,7 +56,7 @@ export default function Home({ onCategorySeeMore, onAddToCart }: HomeProps) {
         <CategoryList onSeeMoreClick={onCategorySeeMore} />
 
         {/* Dual Promotional Banners - Side by Side */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-3 sm:gap-6">
             {banners.slice(0, 2).map((banner: any) => (
               <div key={banner.id} className="relative h-24 sm:h-48 md:h-64 rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer shadow-sm">

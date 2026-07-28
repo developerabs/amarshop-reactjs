@@ -25,6 +25,7 @@ export interface Product {
   }>;
   tax_rate?: number;
   tax_type?: string;
+  total_stock: number;
 }
 
 export interface Category {

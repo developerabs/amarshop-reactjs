@@ -31,7 +31,7 @@ export default function CategoryList({ onSeeMoreClick }: { onSeeMoreClick?: () =
 
   return (
     <section className="py-2 sm:py-4 bg-white border-b border-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-2 sm:mb-4">
           <h2 className="text-sm sm:text-lg font-black text-gray-900 tracking-tight uppercase">
             Shop by <span className="text-emerald-600">Category</span>

@@ -102,8 +102,8 @@ function AppShell() {
           <Route path="/orders/:orderId" element={<OrderTracking />} />
           <Route path="/about" element={<About />} />
           <Route path="/faq" element={<FAQ />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
+          {/* <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} /> */}
           <Route path="/checkout" element={<Checkout />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

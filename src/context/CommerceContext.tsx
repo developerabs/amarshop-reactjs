@@ -127,7 +127,14 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-    
+    if (product.total_stock <= 0) {
+      addNotification({
+        type: "error",
+        title: "Error",
+        message: "This product is out of stock."
+      });
+      return;
+    }
     setCartItems((current) => {
       const normalizedProductId = String(productId);
       const normalizedVariantId = String(variantId ?? "");

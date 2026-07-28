@@ -118,7 +118,7 @@ export default function Footer() {
 
   const footerLinks = useMemo(() => {
     if (!footerMenuItems.length) {
-      return FALLBACK_FOOTER_LINKS;
+      return [];
     }
 
     return footerMenuItems.map((item) => ({
@@ -184,12 +184,7 @@ export default function Footer() {
               </p>
             )}
             <div className="flex gap-3">
-              {(socialLinks.length ? socialLinks : [
-                { id: 1, name: "Facebook", url: "#", icon: "facebook", sort_order: 1 },
-                { id: 2, name: "Instagram", url: "#", icon: "instagram", sort_order: 2 },
-                { id: 3, name: "Twitter", url: "#", icon: "twitter", sort_order: 3 },
-                { id: 4, name: "YouTube", url: "#", icon: "youtube", sort_order: 4 },
-              ]).map((social) => {
+              {(socialLinks.length ? socialLinks : []).map((social) => {
                 const Icon = getSocialIcon(social.icon, social.name);
                 return (
                   <a

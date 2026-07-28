@@ -93,7 +93,7 @@ export default function BlogDetails() {
       <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate("/blogs")}
-          className="mb-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700"
+          className="mb-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-600 hover:text-emerald-700 cursor-pointer"
         >
           ← Back To Blogs
         </button>

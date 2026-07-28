@@ -98,6 +98,7 @@ export default function AllProducts() {
   const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
   const [selectedBrandSlug, setSelectedBrandSlug] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
 
   const [priceRange, setPriceRange] = useState<{label: string, min: number, max: number} | null>(null);
  
@@ -122,6 +123,7 @@ export default function AllProducts() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
+    const getTypeFromUrl = urlParams.get("type");
     const categorySlug = urlParams.get("category");
     const pathParts = location.pathname.split("/").filter(Boolean);
     const routeType = pathParts[0];
@@ -142,6 +144,10 @@ export default function AllProducts() {
     setSelectedBrandSlug(null);
     if (categorySlug) {
       setSelectedCategorySlug(categorySlug);
+      return;
+    }
+    if (getTypeFromUrl) {
+      setSelectedType(getTypeFromUrl);
       return;
     }
 
@@ -226,6 +232,9 @@ export default function AllProducts() {
         } else if (selectedBrands.length) {
             params.brand_id = selectedBrands[0];
         }
+        if (selectedType) {
+            params.type = selectedType;
+        }
 
         if (priceRange) {
             params.min_price = priceRange.min;
@@ -277,7 +286,7 @@ export default function AllProducts() {
     };
 
     fetchAllProducts();
-  }, [currentPage, filterSignature, selectedCategory, selectedCategorySlug, selectedBrands, selectedBrandSlug, priceRange, sortBy]);
+  }, [currentPage, filterSignature, selectedCategory, selectedCategorySlug, selectedBrands, selectedBrandSlug, priceRange, sortBy, selectedType]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -335,17 +344,11 @@ export default function AllProducts() {
         title="Explore Collection | AmarShop" 
         description="Browse our curated collection of premium fashion, electronics, and lifestyle products." 
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-2">
-            <p className="text-xs font-black text-emerald-600 uppercase tracking-[0.3em]">Curation 2026</p>
-            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight font-display italic">
-              The <span className="text-emerald-600">Collection</span>
-            </h1>
-            <p className="text-sm text-gray-500 font-medium">
-              Discovering {totalProducts || allProducts.length} premium artifacts across Bangladesh.
-            </p>
+
           </div>
 
           <div className="flex items-center gap-3">

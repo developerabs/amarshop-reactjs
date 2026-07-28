@@ -31,7 +31,7 @@ export default function Compare() {
         description="Compare your favorite products side-by-side at AmarShop to find the perfect match for your style and budget."
       />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-2">
             <ArrowLeftRight className="w-6 h-6 text-emerald-600" />

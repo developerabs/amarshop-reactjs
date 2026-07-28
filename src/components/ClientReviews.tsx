@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { ChevronRight, ChevronLeft, Star, Play } from "lucide-react";
+import { ChevronRight, ChevronLeft, Star, Play, X } from "lucide-react";
 import api from "../services/api";
 
 type ClientReview = {
@@ -25,6 +25,7 @@ export default function ClientReviews() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [reviews, setReviews] = useState<ClientReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [playingId, setPlayingId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -69,7 +70,7 @@ export default function ClientReviews() {
 
   return (
     <section className="py-4 sm:py-6 bg-gray-50/50 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter uppercase">
             Client <span className="text-emerald-600">Reviews</span>
@@ -124,7 +125,7 @@ export default function ClientReviews() {
                   viewport={{ once: true }}
                   className="min-w-[280px] sm:min-w-[350px] md:min-w-[400px] snap-start group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="relative aspect-video bg-gray-900 overflow-hidden">
+                  {/* <div className="relative aspect-video bg-gray-900 overflow-hidden">
                     <div className="relative w-full h-full">
                       {review.image ? (
                         <img
@@ -139,11 +140,6 @@ export default function ClientReviews() {
 
                       <div className="absolute inset-0 flex items-center justify-center">
                         <button
-                          onClick={() => {
-                            if (review.video_link) {
-                              window.open(review.video_link, "_blank", "noopener,noreferrer");
-                            }
-                          }}
                           className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-emerald-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 disabled:opacity-50"
                           disabled={!review.video_link}
                           aria-label="Play client review video"
@@ -156,7 +152,51 @@ export default function ClientReviews() {
                         <h3 className="text-white text-sm sm:text-base font-bold line-clamp-1">{review.title}</h3>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
+                  <div className="relative aspect-video bg-gray-900 overflow-hidden">
+                  {playingId === review.id ? (
+                    <div className="absolute inset-0">
+                      <iframe
+                        src={review.video_link}
+                        title={review.title}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPlayingId(null);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors z-30"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      className="relative w-full h-full cursor-pointer"
+                      onClick={() => setPlayingId(review.id)}
+                    >
+                      <img
+                        src={review.image}
+                        alt={review.title}
+                        className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-emerald-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-1" />
+                        </div>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+                        <h3 className="text-white text-sm sm:text-base font-bold line-clamp-1">
+                          {review.title}
+                        </h3>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                   <div className="p-4 sm:p-5">
                     <div className="flex items-center justify-between mb-2">

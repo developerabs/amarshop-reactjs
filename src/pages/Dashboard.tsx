@@ -229,7 +229,7 @@ const { addNotification } = useNotifications();
     <main className="min-h-screen bg-[#FBFBFB] pb-24 pt-4">
       <SEO title="User Dashboard | AmarShop" description="Manage your orders, wishlist, and account preferences." />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tight font-display mb-2">Command Center</h1>

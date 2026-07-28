@@ -75,7 +75,7 @@ export default function ProductGrid({ title, highlightWord, type, onAddToCart }:
 
   return (
     <section className="py-4 sm:py-6 bg-gray-50/50 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter">
             {title} <span className="text-emerald-600">{highlightWord}</span>
@@ -99,7 +99,7 @@ export default function ProductGrid({ title, highlightWord, type, onAddToCart }:
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/shop')}
+              onClick={() => navigate(`/shop?type=${type}`)}
               className="group relative flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-600 text-white font-bold text-[9px] uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/10 overflow-hidden"
             >
               <span className="relative z-10">See More</span>

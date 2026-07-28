@@ -218,14 +218,6 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
               <div className="flex items-center w-full bg-gray-50 border border-gray-100 rounded-xl overflow-hidden focus-within:ring-4 focus-within:ring-[var(--theme-primary-600)]/10 focus-within:border-[var(--theme-primary-600)]/30 transition-all shadow-sm">
                 {/* Custom Category Selector */}
                 <div className="relative">
-                  <button
-                    onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                    className="flex items-center gap-2 px-4 border-r border-gray-200 bg-gray-50/50 h-12 text-[11px] font-bold text-gray-600 hover:bg-gray-100 transition-colors whitespace-nowrap uppercase tracking-wider"
-                  >
-                    {selectedCategory}
-                    <ChevronRight className={cn("w-3 h-3 transition-transform", isCategoryDropdownOpen ? "rotate-90" : "rotate-0")} />
-                  </button>
-                  
                   <AnimatePresence>
                     {isCategoryDropdownOpen && (
                       <motion.div

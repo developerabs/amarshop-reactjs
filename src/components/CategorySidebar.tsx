@@ -40,7 +40,7 @@ export default function CategorySidebar({ onViewAll }: { onViewAll?: () => void 
         setActiveCategory(null);
         setHoverIndex(null);
       }}
-      className="hidden lg:block w-64 h-[385px] relative group/sidebar"
+      className="hidden lg:block w-64 h-[498px] relative group/sidebar"
     >
       {/* Sidebar Box */}
       <div className="w-full h-full bg-white border border-gray-100 rounded-xl shadow-sm flex flex-col overflow-hidden">

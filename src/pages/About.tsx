@@ -72,7 +72,7 @@ export default function About() {
     <main className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-emerald-50 to-emerald-100 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight mb-6">
             About AmarShop
           </h1>
@@ -85,7 +85,7 @@ export default function About() {
 
       {/* Stats Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
@@ -102,7 +102,7 @@ export default function About() {
 
       {/* Our Story */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-black text-gray-900 tracking-tight mb-6">Our Story</h2>
@@ -137,7 +137,7 @@ export default function About() {
 
       {/* Our Values */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-gray-900 tracking-tight mb-4">Our Values</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -160,7 +160,7 @@ export default function About() {
 
       {/* Our Team */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-gray-900 tracking-tight mb-4">Meet Our Team</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -185,7 +185,7 @@ export default function About() {
 
       {/* Why Choose Us */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-gray-900 tracking-tight mb-4">Why Choose AmarShop?</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">

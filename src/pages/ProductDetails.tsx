@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { getProductById, getProductBySlug, getProducts } from "../lib/dataService";
 import ProductCard from "../components/ProductCard";
 import { useSettings } from "../context/SettingsContext";
 import {
@@ -82,6 +81,7 @@ type RelatedProduct = {
   discountType: string;
   rating: number;
   reviews: number;
+  total_stock: number;
 };
 
 type ApprovedReview = {
@@ -99,33 +99,7 @@ type ReviewSummary = {
 
 const buildFallbackProduct = (identifier: string | undefined): ApiProduct | null => {
   if (!identifier) return null;
-
-  const localProduct = getProductById(identifier) ?? getProductBySlug(identifier);
-  if (!localProduct) return null;
-
-  const normalizedId = Number.parseInt(String(localProduct.id).replace(/\D/g, ""), 10);
-
-  return {
-    id: Number.isNaN(normalizedId) ? 1 : normalizedId,
-    code: `AS-${String(localProduct.id).toUpperCase()}`,
-    name: localProduct.name,
-    slug: localProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-    price: String(localProduct.price),
-    cost: String(Math.max(0, localProduct.price - 500)),
-    total_stock: localProduct.inStock ? 25 : 0,
-    short_description: `Premium ${localProduct.category.toLowerCase()} selection designed for comfort and style.`,
-    description: `Explore ${localProduct.name}, crafted with care and available for quick delivery across Bangladesh.`,
-    thumbnail: localProduct.image,
-    image: localProduct.image,
-    is_new_arrival: Boolean(localProduct.isNew),
-    category: {
-      name: localProduct.category,
-      slug: localProduct.category.toLowerCase().replace(/\s+/g, "-"),
-    },
-    variants: [],
-    attributes: {},
-    details_image: localProduct.image,
-  };
+  return null; // Placeholder implementation
 };
 
 export default function ProductDetails() {
@@ -423,6 +397,7 @@ export default function ProductDetails() {
     const token = localStorage.getItem("access_token") || localStorage.getItem("token");
     if (!token) {
       setReviewError("Please log in first to submit a review.");
+      navigate('/login')
       setReviewSuccess(null);
       return;
     }
@@ -504,7 +479,7 @@ export default function ProductDetails() {
         description={`Shop ${product.name} in ${categoryName} at AmarShop. High-quality premium goods with fast delivery across Bangladesh.`}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-12">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-12">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-8 overflow-x-auto no-scrollbar whitespace-nowrap">
           <button onClick={() => navigate('/')} className="hover:text-emerald-600">Home</button>
@@ -578,7 +553,7 @@ export default function ProductDetails() {
                   )}
                   <div className="h-4 w-[1px] bg-gray-200" />
                   <div className="text-[10px] font-bold text-gray-400">
-                    {product.code} · {stockLabel}
+                    {product.code} · <span className="text-red-500">{stockLabel}</span>
                   </div>
                 </div>
 
@@ -652,8 +627,8 @@ export default function ProductDetails() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
-                    addToCart(Number(product.id), quantity, selectedVariant?.id ? Number(selectedVariant.id) : undefined);
                     navigate('/checkout');
+                    addToCart(Number(product.id), quantity, selectedVariant?.id ? Number(selectedVariant.id) : undefined);
                   }}
                   className="flex-1 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2"
                 >
@@ -760,7 +735,7 @@ export default function ProductDetails() {
                         <div key={variant.id} className="p-6 bg-gray-50 rounded-3xl group hover:bg-emerald-50 transition-colors">
                           <h4 className="font-black text-gray-900 text-sm mb-2">{variant.name}</h4>
                           <p className="text-gray-500 text-xs mb-2">Price: {formatPrice(Number(variant.price))}</p>
-                          <p className="text-gray-400 text-[10px]">Stock: {variant.stock > 0 ? `${variant.stock} available` : 'Out of stock'}</p>
+                          <p className="text-gray-400 text-[10px]">Stock: {variant.stock > 0 ? `${variant.stock} Available` : 'Out of stock'}</p>
                         </div>
                       ))
                     ) : (
@@ -897,13 +872,6 @@ export default function ProductDetails() {
                           className="px-6 py-3 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                         >
                           {isReviewSubmitting ? "Submitting..." : "Submit Review"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => navigate('/login')}
-                          className="px-6 py-3 rounded-xl border border-gray-200 bg-white text-xs font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:border-emerald-200 transition-all"
-                        >
-                          Login
                         </button>
                       </div>
                     </form>
