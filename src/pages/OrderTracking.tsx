@@ -165,7 +165,7 @@ export default function OrderTracking() {
     : "Address not available";
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 pt-28">
+    <main className="min-h-screen bg-gray-50 pb-20 pt-4">
       <SEO 
         title="Track Your Order | AmarShop" 
         description="Monitor your AmarShop delivery in real-time. Enter your order ID to see exactly where your items are."

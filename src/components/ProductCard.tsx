@@ -178,7 +178,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
               e.stopPropagation();
               handleProductClick();
             }}
-            className="col-span-4 py-2.5 rounded-xl bg-gray-900 text-white font-black text-[11px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md shadow-gray-200"
+            className="col-span-4 py-2.5 rounded-xl bg-gray-900 text-white font-black text-[8px] sm:text-[11px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md shadow-gray-200"
           >
             View Details
           </button>

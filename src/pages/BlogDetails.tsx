@@ -89,7 +89,7 @@ export default function BlogDetails() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-24 pb-20">
+    <main className="min-h-screen bg-gray-50 pt-4 pb-20">
       <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate("/blogs")}

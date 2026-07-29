@@ -77,20 +77,20 @@ export default function FlashDeals() {
 
   return (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="bg-white rounded-5xl shadow-luxury border border-gray-100 relative">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10 relative z-10">
+      <div className="bg-white rounded-5xl shadow-luxury border border-gray-100 relative mt-8 sm:mt-12 mb-8 sm:mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 relative z-10">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-4 bg-red-50 text-red-600 rounded-full">
-              <Zap className="w-4 h-4 fill-current" />
-              <span className="text-xs font-black uppercase tracking-widest">Limited Time Offer</span>
-            </div>
             <h2 className="text-3xl sm:text-2xl font-black text-gray-900 tracking-tight">
               Flash <span className="text-emerald-600">Deals</span>
             </h2>
           </div>
+          <div className="inline-flex items-center gap-2 px-4 py-4 bg-red-50 text-red-600 rounded-full">
+            <Zap className="w-4 h-4 fill-current" />
+            <span className="text-xs font-black uppercase tracking-widest">Limited Time Offer</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5  relative z-10">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5  relative z-10">
           {flashProducts.map((product) => (
             <motion.div
               key={product.id}
@@ -133,7 +133,7 @@ export default function FlashDeals() {
                   </div>
                   <button 
                     onClick={() => addToCart(Number(product.id))}
-                    className="p-3 bg-gray-900 text-white rounded-xl hover:bg-emerald-600 transition-all active:scale-90 shadow-lg"
+                    className="p-2 sm:p-3 bg-gray-900 text-white rounded-xl hover:bg-emerald-600 transition-all active:scale-90 shadow-lg"
                   >
                     <ShoppingCart className="w-4 h-4" />
                   </button>

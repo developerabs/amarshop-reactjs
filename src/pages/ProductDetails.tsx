@@ -355,7 +355,7 @@ export default function ProductDetails() {
   const selectedVariantAdditional = selectedVariant ? Number(selectedVariant.additional_price ?? selectedVariant.price ?? 0) : 0;
   const displayedPrice = baseSalePrice + selectedVariantAdditional;
   const displayedAdditionalPrice = Number(product?.price ?? 0);
-  const stockCount = selectedVariant?.stock ?? product?.total_stock ?? 0;
+  const stockCount = product?.total_stock ?? 0;
   const stockLabel = stockCount > 0 ? `${stockCount} in stock` : "Out of stock";
   const categoryName = product?.category?.name ?? "Uncategorized";
   const brandName = product?.brand?.name ?? null;
@@ -754,7 +754,6 @@ export default function ProductDetails() {
                         <div key={variant.id} className="p-6 bg-gray-50 rounded-3xl group hover:bg-emerald-50 transition-colors">
                           <h4 className="font-black text-gray-900 text-sm mb-2">{variant.name}</h4>
                           <p className="text-gray-500 text-xs mb-2">Price: {formatPrice(Number(variant.price))}</p>
-                          <p className="text-gray-400 text-[10px]">Stock: {variant.stock > 0 ? `${variant.stock} Available` : 'Out of stock'}</p>
                         </div>
                       ))
                     ) : (

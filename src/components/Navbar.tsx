@@ -88,8 +88,9 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
   const [recentSearches, setRecentSearches] = useState<SearchResult['products']>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const navigate = useNavigate();
-
-  const categories = ["All Categories", "Fashion", "Electronics", "Home", "Beauty", "Groceries"];
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  // const categories = ["All Categories", "Fashion", "Electronics", "Home", "Beauty", "Groceries"];
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -171,7 +172,22 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
     localStorage.setItem("recentSearches", JSON.stringify(recentList));
     setRecentSearches(recentList);
   };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get("/categories");
+        if (response.data.success && response.data.data.categories) {
+          setCategories(response.data.data.categories.slice(0, 11));
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchCategories();
+  }, []);
   return (
     <>
       {/* Top Announcement Bar - Not sticky, hidden on mobile */}
@@ -391,7 +407,8 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
 
             {/* Mobile Actions */}
             <div className="flex md:hidden items-center gap-1">
-              <button 
+              <button
+                onClick={() => navigate('/orders/track-order')}
                 aria-label="Track Order"
                 className="p-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
               >
@@ -525,6 +542,9 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                             } else if (item === 'Profile') {
                               onProfileClick?.();
                               setIsMobileMenuOpen(false);
+                            } else if (item === 'Orders') {
+                              navigate('dashboard?t=orders');
+                              setIsMobileMenuOpen(false);
                             }
                           }}
                           className="flex items-center justify-between w-full py-2.5 px-2 text-xs font-bold text-gray-700 hover:text-emerald-600 hover:bg-emerald-50/50 rounded-lg transition-all"
@@ -536,67 +556,95 @@ export default function Navbar({ onCartClick, onWishlistClick, onProfileClick }:
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-0.5">
-                    {HIERARCHICAL_CATEGORIES.map(cat => (
-                      <div key={cat.name} className="space-y-0.5">
+                  <div className="space-y-1">
+                    {categories.map((cat) => (
+                      <div key={cat.id}>
+                        {/* Parent Category */}
                         <button
-                          onClick={() => setExpandedCategory(expandedCategory === cat.name ? null : cat.name)}
+                          onClick={() => {
+                            setExpandedCategory(
+                              expandedCategory === cat.id ? null : cat.id
+                            );
+                            navigate(`/shop?category=${cat.slug}`);
+                          }}
                           className={cn(
-                            "flex items-center justify-between w-full py-2.5 px-2 text-xs font-bold rounded-lg transition-all",
-                            expandedCategory === cat.name ? "bg-emerald-50 text-emerald-600" : "text-gray-700 hover:bg-gray-50"
+                            "flex items-center justify-between w-full py-2.5 px-2 rounded-lg text-sm font-semibold",
+                            expandedCategory === cat.id
+                              ? "bg-emerald-50 text-emerald-600"
+                              : "hover:bg-gray-50"
                           )}
                         >
-                          <span className="flex items-center gap-2.5">
-                            <cat.icon className={cn("w-3.5 h-3.5", expandedCategory === cat.name ? "text-emerald-600" : "text-gray-400")} />
-                            {cat.name}
-                          </span>
-                          {cat.subCategories && (
-                            <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-200", expandedCategory === cat.name && "rotate-90")} />
+                          <span>{cat.name}</span>
+
+                          {cat.children.length > 0 && (
+                            <ChevronRight
+                              className={cn(
+                                "w-4 h-4 transition-transform",
+                                expandedCategory === cat.id && "rotate-90"
+                              )}
+                            />
                           )}
                         </button>
 
-                        {/* Sub Categories Accordion */}
                         <AnimatePresence>
-                          {cat.subCategories && expandedCategory === cat.name && (
+                          {expandedCategory === cat.id && cat.children.length > 0 && (
                             <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden ml-4 pl-2 border-l border-emerald-100 space-y-0.5"
+                              initial={{ height: 0 }}
+                              animate={{ height: "auto" }}
+                              exit={{ height: 0 }}
+                              className="overflow-hidden ml-4 border-l border-emerald-100 pl-3"
                             >
-                              {cat.subCategories.map(sub => (
-                                <div key={sub.name}>
+                              {cat.children.map((sub) => (
+                                <div key={sub.id}>
+                                  {/* Second Level */}
                                   <button
-                                    onClick={() => setExpandedSubCategory(expandedSubCategory === sub.name ? null : sub.name)}
-                                    className={cn(
-                                      "flex items-center justify-between w-full py-2 text-[10px] font-black uppercase tracking-widest transition-colors",
-                                      expandedSubCategory === sub.name ? "text-emerald-600" : "text-gray-500"
-                                    )}
+                                    onClick={() => {
+                                      setExpandedSubCategory(
+                                        expandedSubCategory === sub.id
+                                          ? null
+                                          : sub.id
+                                      );
+                                      navigate(`/shop?category=${sub.slug}`);
+                                    }}
+                                    className="flex items-center justify-between w-full py-2 text-sm text-gray-600 hover:text-emerald-600"
                                   >
-                                    {sub.name}
-                                    <ChevronRight className={cn("w-3 h-3 transition-transform duration-200", expandedSubCategory === sub.name && "rotate-90")} />
+                                    <span>{sub.name}</span>
+
+                                    {sub.children.length > 0 && (
+                                      <ChevronRight
+                                        className={cn(
+                                          "w-4 h-4 transition-transform",
+                                          expandedSubCategory === sub.id &&
+                                            "rotate-90"
+                                        )}
+                                      />
+                                    )}
                                   </button>
 
-                                  {/* Child Categories Accordion */}
                                   <AnimatePresence>
-                                    {expandedSubCategory === sub.name && (
-                                      <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="overflow-hidden pb-2 space-y-0.5"
-                                      >
-                                        {sub.childCategories.map(child => (
-                                          <a
-                                            key={child}
-                                            href="#"
-                                            className="block py-1.5 pl-2 text-[11px] font-bold text-gray-400 hover:text-emerald-600 transition-colors"
-                                          >
-                                            {child}
-                                          </a>
-                                        ))}
-                                      </motion.div>
-                                    )}
+                                    {expandedSubCategory === sub.id &&
+                                      sub.children.length > 0 && (
+                                        <motion.div
+                                          initial={{ height: 0 }}
+                                          animate={{ height: "auto" }}
+                                          exit={{ height: 0 }}
+                                          className="overflow-hidden ml-4 border-l pl-3"
+                                        >
+                                          {sub.children.map((child) => (
+                                            <button
+                                              key={child.id}
+                                              onClick={() =>
+                                                navigate(
+                                                  `/shop?category=${child.slug}`
+                                                )
+                                              }
+                                              className="block w-full text-left py-2 text-sm text-gray-500 hover:text-emerald-600"
+                                            >
+                                              {child.name}
+                                            </button>
+                                          ))}
+                                        </motion.div>
+                                      )}
                                   </AnimatePresence>
                                 </div>
                               ))}

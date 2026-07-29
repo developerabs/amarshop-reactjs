@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNotifications } from "../context/NotificationContext";
 import { Link } from "react-router-dom";
 import { Mail, ArrowLeft } from "lucide-react";
+import api from "../services/api";
 
 export default function ForgotPassword() {
+  const { addNotification } = useNotifications();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -17,11 +20,23 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setError("");
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await api.post("/auth/password/email", { email });
+      if (response.data.success) {
+        setIsSuccess(true);
+        addNotification({
+          type: "success",
+          title: "Password Reset Email Sent",
+          message: "A password reset link has been sent to your email address."
+        });
+      } else {
+        setError(response.data.message || "An error occurred");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "An error occurred");
+    } finally {
       setIsLoading(false);
-      setIsSuccess(true);
-    }, 1500);
+    }
   };
 
   if (isSuccess) {
@@ -61,7 +76,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 pt-20">
+    <main className="min-h-screen bg-gray-50 pb-20 pt-4">
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
           <div className="text-center mb-8">

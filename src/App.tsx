@@ -35,6 +35,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const About = lazy(() => import("./pages/About"));
@@ -98,12 +99,9 @@ function AppShell() {
           <Route path="/login" element={<Login setIsProfileOpen={setIsProfileOpen} />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/password-reset" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/orders/:orderId" element={<OrderTracking />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/faq" element={<FAQ />} />
-          {/* <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} /> */}
           <Route path="/checkout" element={<Checkout />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

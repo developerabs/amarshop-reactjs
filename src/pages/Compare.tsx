@@ -25,7 +25,7 @@ export default function Compare() {
   }, [compareItems]);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 pt-28">
+    <main className="min-h-screen bg-gray-50 pb-20 pt-4">
       <SEO 
         title="Compare Products | AmarShop" 
         description="Compare your favorite products side-by-side at AmarShop to find the perfect match for your style and budget."

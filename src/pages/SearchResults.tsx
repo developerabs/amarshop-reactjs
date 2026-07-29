@@ -41,12 +41,7 @@ export default function SearchResults() {
   const searchTerm = query.get("q")?.trim() ?? "";
   const category = query.get("category")?.trim() ?? "";
   const [searchResults, setSearchResults] = useState<SearchResult>({ categories: [], brands: [], products: [] });
-
-  const results = useMemo(
-    () => filterProducts({ query: searchTerm, category }),
-    [searchTerm, category]
-  );
-
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [searchTerm, category]);

@@ -77,7 +77,7 @@ export default function Login({ setIsProfileOpen }: LoginProps) {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-20 pt-20">
+    <main className="min-h-screen bg-gray-50 pb-20 pt-4">
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
           <div className="text-center mb-8">
